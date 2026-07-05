@@ -14,7 +14,7 @@
 
    ```bash
       git clone https://github.com/whyfourwhentwo-sketch/practice-maxbot.git
-      cd practice-maxbo
+      cd practice-maxbot
    ```
 ### 3. Установка зависимостей
 
