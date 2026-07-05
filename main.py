@@ -4,7 +4,7 @@ from config import BOT_TOKEN
 from model_manager import load_or_train_model
 from embeddings import load_embedding_model
 from prediction import PredictionService
-from bot_handlers import handle_start, handle_message
+from bot_handlers import handle_start, handle_message, handle_private_message
 
 
 def setup_bot_data(app: Application) -> None:
@@ -26,7 +26,17 @@ def create_application() -> Application:
 def register_handlers(app: Application) -> None:
     """Регистрирует обработчики команд и сообщений."""
     app.add_handler(CommandHandler("start", handle_start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    group_filter = filters.ChatType.GROUP | filters.ChatType.SUPERGROUP
+    app.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND & group_filter,
+        handle_message
+    ))
+
+    app.add_handler(MessageHandler(
+        filters.ChatType.PRIVATE,
+        handle_private_message
+    ))
 
 
 def main() -> None:

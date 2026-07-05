@@ -11,9 +11,8 @@ async def handle_start(update: Update, context: CallbackContext) -> None:
 
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
-    """Обработчик текстовых сообщений."""
-    text = update.message.text
-    sender = update.message.from_user.first_name
+    """Обработчик текстовых сообщений в чате."""
+    text, sender = get_message_details(update)
     print(f"{sender}: {text}")
 
     prediction_service = context.bot_data['prediction_service']
@@ -24,3 +23,14 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(response)
 
 
+async def handle_private_message(update: Update, context: CallbackContext) -> None:
+    """Игнорим)"""
+    text, sender = get_message_details(update)
+    print(f"[Сообщение в личку бота] {sender}: {text}")
+    return
+
+
+def get_message_details(update: Update) -> tuple[str, str]:
+    text = update.message.text
+    sender = update.message.from_user.first_name
+    return text, sender
