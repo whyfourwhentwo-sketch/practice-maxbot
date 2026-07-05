@@ -1,13 +1,12 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 import numpy as np
-import pandas as pd
 from openpyxl import load_workbook
 from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report
 import joblib
 from dotenv import load_dotenv
 import os
@@ -77,10 +76,10 @@ async def handle_message(update: Update, context: CallbackContext):
     sender = update.message.from_user.first_name
     
     print(f"{sender}: {text}")
-    
     embedding = MODEL.encode([text])
     prediction = context.bot_data['model'].predict(embedding)
     response = "Полезное" if prediction[0] == 1 else "Бесполезное"
+    print(f"Бот: {response}")
     
     await update.message.reply_text(response)
     
