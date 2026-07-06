@@ -1,18 +1,18 @@
 from sentence_transformers import SentenceTransformer
 import numpy as np
-from torch import Tensor
+
 
 from config import MODEL_NAME, EMBEDDINGS_FILE
 
 
 def load_embedding_model() -> SentenceTransformer:
-    """Загружает модель для создания эмбеддингов."""
+    """Загружает модель для создания эмбеддингов. (Перенести отсюда куд-нибудь)"""
     return SentenceTransformer(MODEL_NAME)
 
 
-def create_embeddings(phrases: list[str], model: SentenceTransformer) -> Tensor:
+def create_embeddings(phrases: list[str], model: SentenceTransformer) -> np.ndarray:
     """Создает эмбеддинги для списка фраз."""
-    return model.encode(phrases, show_progress_bar=True)
+    return np.array(model.encode(phrases, show_progress_bar=True))
 
 
 def save_embeddings(embeddings: np.ndarray, labels: np.ndarray) -> None:

@@ -1,1 +1,4 @@
 .env
+src/encoded/**
+src/excel/**
+__pycache__/

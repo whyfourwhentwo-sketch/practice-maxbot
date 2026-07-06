@@ -1,16 +1,17 @@
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from config import BOT_TOKEN
-from model_manager import load_or_train_model
-from embeddings import load_embedding_model
-from prediction import PredictionService
-from bot_handlers import handle_start, handle_message, handle_private_message
+from components.model.model_load import get_classifier
+from components.model.model_train import train_classifier
+from components.data.embeddings_handler import load_embedding_model
+from components.bot.prediction import PredictionService
+from components.bot.bot_handlers import handle_start, handle_message, handle_private_message
 
 
 def setup_bot_data(app: Application) -> None:
     """Загружает сервисы в контекст бота."""
     embedding_model = load_embedding_model()
-    classifier = load_or_train_model()
+    classifier = get_classifier()
     prediction_service = PredictionService(embedding_model, classifier)
 
     app.bot_data['prediction_service'] = prediction_service

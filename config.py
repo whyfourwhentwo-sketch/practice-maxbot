@@ -6,9 +6,9 @@ load_dotenv()
 
 # Пути к файлам
 BASE_DIR = Path(__file__).parent
-DATA_FILE = BASE_DIR / "data_ml.xlsx"
-EMBEDDINGS_FILE = BASE_DIR / "data.npz"
-MODEL_FILE = BASE_DIR / "model.pkl"
+DATA_FILE = BASE_DIR / "src/excel/data_ml.xlsx"
+EMBEDDINGS_FILE = BASE_DIR / "src/machine/data.npz"
+MODEL_FILE = BASE_DIR / "src/models/classifier.pkl"
 
 # Telegram
 BOT_TOKEN = os.getenv("TOKEN")

@@ -20,3 +20,15 @@ def parse_excel_rows(rows) -> tuple[list[str], list[int]]:
 def convert_label(value: str) -> int:
     """Конвертирует текстовую метку в числовую."""
     return 1 if value == LABEL_POSITIVE else 0
+
+
+def save_excel_data() -> None:
+    """(WIP) Сохраняет данные в Excel файл. Нужен будет для правок за ботом и дообучения"""
+    workbook = load_workbook(DATA_FILE)
+    sheet = workbook.active
+    for row in sheet.iter_rows(min_row=2, max_row=sheet.max_row, min_col=PHRASE_COLUMN + 1, max_col=LABEL_COLUMN + 1):
+        phrase_cell, label_cell = row
+        # Здесь можно добавить код для обновления значений ячеек
+        # Например, phrase_cell.value = "новая фраза"
+        # label_cell.value = "новая метка"
+    workbook.save(DATA_FILE)

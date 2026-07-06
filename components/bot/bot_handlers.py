@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from utils import format_prediction
+from components.utils import format_prediction
 
 
 async def handle_start(update: Update, context: CallbackContext) -> None:
