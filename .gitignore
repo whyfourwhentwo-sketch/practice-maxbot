@@ -1,4 +1,5 @@
 .env
-src/encoded/**
-src/excel/**
+data/excel/**
+data/machine/**
 __pycache__/
+.idea/

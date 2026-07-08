@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "practice-maxbot"
-version = "0.1.0"
-description = ""
+version = "0.2.0"
+description = "Telegram bot monorepo: bot, ML worker, API"
 authors = ["Faspeice <154542847+Faspeice@users.noreply.github.com>"]
 readme = "README.md"
 package-mode = false
@@ -13,13 +13,17 @@ priority = "supplemental"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-python-telegram-bot = "^22.8"
+shared = {path = "packages/shared", develop = true}
+python-telegram-bot = {extras = ["job-queue"], version = "^22.8"}
 python-dotenv = "^1.2.2"
 pandas = "^3.0.3"
 sentence-transformers = "^5.6.0"
 scikit-learn = "^1.9.0"
 openpyxl = "^3.1.5"
 joblib = "^1.5.3"
+redis = "^5.2.1"
+pydantic = "^2.10.6"
+flask = "^3.1.0"
 
 [build-system]
 requires = ["poetry-core"]
