@@ -57,11 +57,38 @@ poetry run python -m api.app
 
 ### 5. Обучение модели
 
+Запуск обучения моделей, требует Excel файл `data/excel/data_ml.xlsx`.
+
 ```bash
-poetry run python training/train.py
+# -t --train
+poetry run python main.py -t
 ```
 
-Требует `data/excel/data_ml.xlsx`. Результат: `data/models/classifier.pkl`.
+Или с указанием пользовательского файла:
+
+```bash
+# -f --file
+poetry run python main.py -t -f path/to/file.xlsx
+```
+В данный момент -f не работает сам по себе
+
+**Результат:** 
+Модели сохраняются в `data/models/` согласно меткам, перечисленным в конфиге `shared/config.py` 
+
+```text
+LABELS = { # модели создаются на базе этого параметра
+    "useful": ["да", "нет"],
+    "sentiment": ["+", "-", "="],
+}
+
+Сохраненные модели (при наличии данных столбцов в таблице): useful.pkl, sentiment.pkl
+```
+
+Метки, не указанные в конфиге или несуществующие в таблице будут проигнорированы
+
+**Аргументы:**
+- `-t, --train` — запустить обучение моделей
+- `-f, --file` — путь к файлу с данными (опционально)
 
 ## Docker
 

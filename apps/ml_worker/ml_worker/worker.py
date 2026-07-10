@@ -14,7 +14,7 @@ from shared.db import StatsRepository
 from shared.queue import InferenceMessage, InferenceResultMessage, MessageBroker
 from shared.queue.broker import StreamEntry
 from shared.utils import format_prediction
-from .model_loader import load_classifier, load_embedding_model
+from .model_loader import load_classifiers, load_embedding_model
 from .prediction import PredictionService
 
 
@@ -37,9 +37,8 @@ class MLWorker:
     def load_models(self) -> None:
         print("Loading embedding model and classifier...", flush=True)
         embedding_model = load_embedding_model()
-        classifier = load_classifier()
         print("Models loaded.", flush=True)
-        self._prediction_service = PredictionService(embedding_model, classifier)
+        self._prediction_service = PredictionService(embedding_model, load_classifiers())
         self._stats.connect()
 
     async def run(self) -> None:
