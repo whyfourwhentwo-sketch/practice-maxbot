@@ -1,16 +1,22 @@
 from sentence_transformers import SentenceTransformer
 from sklearn.linear_model import LogisticRegression
-
+import numpy as np
 
 class PredictionService:
     """Сервис батч-классификации сообщений."""
 
-    def __init__(self, embedding_model: SentenceTransformer, classifier: LogisticRegression):
+    def __init__(self, embedding_model: SentenceTransformer, classifiers: dict[str, LogisticRegression]):
         self.embedding_model = embedding_model
-        self.classifier = classifier
+        self.classifiers = classifiers
 
-    def predict_batch(self, texts: list[str]) -> list[int]:
+    def predict_batch(self, texts: list[str]) -> dict[str, list[int]] | None:
+        """Размечаем всеми моделями"""
         if not texts:
-            return []
+            return None
+        
+        predicts = {name: [] for name in self.classifiers.keys()}
         embeddings = self.embedding_model.encode(texts, show_progress_bar=False)
-        return self.classifier.predict(embeddings).tolist()
+        for name, model in self.classifiers.items():
+            predicts[name] = np.array(model.predict(embeddings))
+        
+        return predicts

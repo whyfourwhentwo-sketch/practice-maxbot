@@ -12,6 +12,7 @@ from shared.config import (
 )
 from shared.db import StatsRepository
 from shared.queue import InferenceMessage, InferenceResultMessage, MessageBroker
+from shared.queue.schemas import InferenceResultMessageTest, InferenceResultBatch 
 from shared.queue.broker import StreamEntry
 from shared.utils import format_prediction
 from .model_loader import load_classifiers, load_embedding_model
@@ -72,27 +73,41 @@ class MLWorker:
 
         from shared.db.repository import PredictionRecord
 
-        records: list[PredictionRecord] = []
-        for entry, prediction in zip(entries, predictions):
+        # records: list[PredictionRecord] = []
+        batch_messages = []
+        for i, entry in enumerate(entries):
             message = entry.message
-            response = format_prediction(prediction)
-            result_message = InferenceResultMessage(
-                message_id=message.message_id,
-                chat_id=message.chat_id,
-                prediction=prediction,
-                response_text=response,
-                processed_at=datetime.now(timezone.utc).isoformat(),
+            batch_messages.append(
+                InferenceResultMessageTest(
+                    message_id=message.message_id,
+                    chat_id=message.chat_id,
+                )
             )
-            self._result_broker.publish(result_message)
-            records.append(PredictionRecord(
-                chat_id=message.chat_id,
-                message_id=message.message_id,
-                label=prediction,
-                text=message.text,
-            ))
-            print(f"Inference ready for chat {message.chat_id}: {response}")
+        
+        self._result_broker.publish(InferenceResultBatch(messages=batch_messages, predictions=predictions))
+                
+        # for entry, prediction in zip(entries, predictions):
+        #     message = entry.message
+        #     response = format_prediction(prediction)
+        #     result_message = InferenceResultMessage(
+        #         message_id=message.message_id,
+        #         chat_id=message.chat_id,
+        #         prediction=prediction,
+        #         response_text=response,
+        #         processed_at=datetime.now(timezone.utc).isoformat(),
+        #     )
+        #     self._result_broker.publish(result_message)
+            
+            # Потом переработаю под новую модель данных
+            # records.append(PredictionRecord(
+            #     chat_id=message.chat_id,
+            #     message_id=message.message_id,
+            #     label=prediction,
+            #     text=message.text,
+            # ))
+            # print(f"Inference ready for chat {message.chat_id}: {response}")
 
-        self._stats.save_batch(records)
+        #self._stats.save_batch(records)
         self._request_broker.ack([entry.entry_id for entry in entries])
 
     def stop(self) -> None:

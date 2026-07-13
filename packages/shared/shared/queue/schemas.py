@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-
+import numpy as np
 
 class InferenceMessage(BaseModel):
     """Сообщение из Telegram-бота для ML-воркера."""
@@ -19,3 +19,16 @@ class InferenceResultMessage(BaseModel):
     prediction: int
     response_text: str
     processed_at: str = Field(default="", description="ISO timestamp")
+
+
+class InferenceResultMessageTest(BaseModel):
+    """Тест новой модели отправки сообщений"""
+    message_id: int
+    chat_id: int
+    
+    
+class InferenceResultBatch(BaseModel):
+    """Отправка сообщений батчем боту, чисто для тестов"""
+    messages: list[InferenceResultMessageTest]
+    predictions: dict[str, np.ndarray]
+    

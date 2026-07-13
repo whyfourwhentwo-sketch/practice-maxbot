@@ -16,7 +16,7 @@ from shared.config import (
     INFERENCE_STREAM,
 )
 from shared.queue import InferenceResultMessage, MessageBroker
-
+from shared.queue.schemas import InferenceResultBatch, InferenceResultMessageTest
 
 def setup_bot_data(app: Application) -> None:
     app.bot_data["inference_broker"] = MessageBroker(
@@ -41,23 +41,30 @@ async def send_results_job(context) -> None:
         consumer_name,
         8,
         200,
-        InferenceResultMessage,
+        InferenceResultBatch
     )
     if not entries:
         return
 
     ack_ids: list[str] = []
     for entry in entries:
-        message = entry.message
-        try:
-            await app.bot.send_message(
-                chat_id=message.chat_id,
-                text=message.response_text,
-                reply_parameters=ReplyParameters(message_id=message.message_id),
-            )
-            ack_ids.append(entry.entry_id)
-        except telegram.error.TelegramError as exc:
-            print(f"Failed to send result for chat {message.chat_id}: {exc}")
+        messages = entry.messages
+        predictions = entry.predictions
+        
+        for i, message in messages:
+            try:
+                await app.bot.send_message(
+                    chat_id=message.chat_id,
+                    text = "\n".join(
+                        f"{name} : {predictions[name][i]}"
+                        for name in predictions
+                    ),
+                    reply_parameters=ReplyParameters(message_id=message.message_id)
+                )
+                ack_ids.append(entry.entry_id)
+            except telegram.error.TelegramError as exc:
+                print(f"Failed to send result for chat {message.chat_id}: {exc}")
+        
 
     if ack_ids:
         await asyncio.to_thread(result_broker.ack, ack_ids)
