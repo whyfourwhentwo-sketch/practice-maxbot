@@ -15,8 +15,8 @@ from shared.config import (
     INFERENCE_RESULT_STREAM,
     INFERENCE_STREAM,
 )
-from shared.queue import InferenceResultMessage, MessageBroker
-from shared.queue.schemas import InferenceResultBatch, InferenceResultMessageTest
+from shared.queue import MessageBroker, InferenceResultBatch
+
 
 def setup_bot_data(app: Application) -> None:
     app.bot_data["inference_broker"] = MessageBroker(
@@ -99,7 +99,6 @@ def main() -> None:
     """Главная функция запуска бота."""
     app = create_application()
     setup_bot_data(app)
-
     app.job_queue.run_repeating(send_results_job, interval=1.0, first=1.0)
 
     print("Бот запущен и слушает сообщения...")

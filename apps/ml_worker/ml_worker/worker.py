@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+
 import os
 import signal
 
@@ -11,10 +11,10 @@ from shared.config import (
     ML_BATCH_SIZE,
 )
 from shared.db import StatsRepository
-from shared.queue import InferenceMessage, InferenceResultMessage, MessageBroker
-from shared.queue.schemas import InferenceResultMessageTest, InferenceResultBatch 
-from shared.queue.broker import StreamEntry
-from shared.utils import format_prediction
+from shared.queue import InferenceMessage
+
+from shared.queue.broker import StreamEntry, MessageBroker
+from shared.queue import InferenceResultBatch, InferenceResultMessageTest
 from .model_loader import load_classifiers, load_embedding_model
 from .prediction import PredictionService
 

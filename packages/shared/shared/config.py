@@ -40,7 +40,7 @@ PHRASE_COLUMN = 0
 LABEL_COLUMN = 3
 LABELS = { # модели создаются на базе этого параметра
     "useful": ["да", "нет"],
-    "sentiment": ["+", "-", "="],
+    # "sentiment": ["+", "-", "="],
     #"category": ["category1", "category2", "category3"], #WIP
 }
 

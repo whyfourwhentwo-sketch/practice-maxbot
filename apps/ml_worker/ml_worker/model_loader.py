@@ -10,8 +10,27 @@ def load_embedding_model() -> SentenceTransformer:
 
 
 def load_classifiers() -> dict[str, LogisticRegression]:
-    """Загрузка моделек"""
-    # При отсутствии модельки лучше крашить от греха подальше
-    # Возможно стоит подгружать из директории, но тогда, если какой-то модели нет - мы этого не узнаем, а в конфиге модели не просто так прописаны - они должны быть по идее
-    return {name: joblib.load(MODELS_DIR / f"{name}.pkl") for name, label in LABELS.items()}
+    """Загрузка моделей."""
+    classifiers = {}
+
+    for name, label in LABELS.items():
+        model_path = MODELS_DIR / f"{name}.pkl"
+
+        if not model_path.exists():
+            raise FileNotFoundError(
+                f"ERROR: Отсутствует обязательная модель '{name}'.\n"
+                f"Ожидаемый путь: {model_path.resolve()}\n"
+                f"Проверьте, что файлы моделей корректно скопированы в директорию {MODELS_DIR.resolve()}"
+            )
+
+        try:
+            classifiers[name] = joblib.load(model_path)
+        except Exception as e:
+            raise RuntimeError(
+                f"ERROR: Не удалось прочитать модель '{name}'.\n"
+                f"Путь: {model_path.resolve()}\n"
+                f"Причина: {e}"
+            )
+
+    return classifiers
         
