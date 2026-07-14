@@ -24,6 +24,7 @@ joblib = "^1.5.3"
 redis = "^5.2.1"
 pydantic = "^2.10.6"
 flask = "^3.1.0"
+flask-cors = "^6.0.5"
 
 [build-system]
 requires = ["poetry-core"]

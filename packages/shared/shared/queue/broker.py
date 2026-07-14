@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from redis.exceptions import ResponseError
 
 from shared.config import INFERENCE_CONSUMER_GROUP, INFERENCE_STREAM, REDIS_URL
-from shared.queue.schemas import InferenceMessage
+from shared.queue.schemas import InferenceMessage, InferenceResultBatch
 
 
 @dataclass(frozen=True)
@@ -76,6 +76,31 @@ class MessageBroker:
         if not entry_ids:
             return 0
         return self._redis.xack(self._stream, self._group, *entry_ids)
+
+    def read_stream(
+        self,
+        count: int = 60,
+        start: str = "-",
+        end: str = "+",
+        reverse: bool = False,
+        message_model: Type[BaseModel] = InferenceResultBatch,
+    ) -> list[StreamEntry]:
+        """
+        Временное решение до внедрения БД. 
+        
+        Чтение потока без привязки к PEL и Consumer_Group
+        """
+        
+        if reverse:
+            records = self._redis.xrevrange(self._stream, max=end, min=start, count=count)
+        else:
+            records = self._redis.xrange(self._stream, min=start, max=end, count=count)
+
+        entries: list[StreamEntry] = []
+        for entry_id, fields in records or []:
+            payload = json.loads(fields["payload"])
+            entries.append(StreamEntry(entry_id=entry_id, message=message_model(**payload)))
+        return entries
 
     def ping(self) -> bool:
         return bool(self._redis.ping())

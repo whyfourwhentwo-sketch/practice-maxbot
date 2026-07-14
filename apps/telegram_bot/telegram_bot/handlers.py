@@ -16,19 +16,27 @@ async def handle_start(update: Update, context: CallbackContext) -> None:
 
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
-    text, sender = get_message_details(update)
-    print(f"{sender}: {text}")
+    try:
+        text, sender = get_message_details(update)
+        print(f"[handle_message] received message from {sender}: {text}")
 
-    broker = get_broker(context)
-    message = InferenceMessage(
-        message_id=update.message.message_id,
-        chat_id=update.effective_chat.id,
-        text=text,
-        user_name=sender,
-        enqueued_at=datetime.now(timezone.utc).isoformat(),
-    )
-    entry_id = broker.publish(message)
-    print(f"Enqueued inference job {entry_id} for chat {message.chat_id}")
+        broker = get_broker(context)
+        print("[handle_message] got broker, preparing InferenceMessage")
+
+        message = InferenceMessage(
+            message_id=update.message.message_id,
+            chat_id=update.effective_chat.id,
+            text=text,
+            user_name=sender,
+            enqueued_at=datetime.now(timezone.utc).isoformat(),
+        )
+
+        print("[handle_message] publishing inference job")
+        entry_id = broker.publish(message)
+        print(f"[handle_message] Enqueued inference job {entry_id} for chat {message.chat_id}")
+    except Exception as exc:
+        print(f"[handle_message] error: {exc}")
+        raise
 
 
 async def handle_private_message(update: Update, context: CallbackContext) -> None:

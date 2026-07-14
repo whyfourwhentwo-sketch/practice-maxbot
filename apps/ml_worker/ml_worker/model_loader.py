@@ -13,7 +13,7 @@ def load_classifiers() -> dict[str, LogisticRegression]:
     """Загрузка моделей."""
     classifiers = {}
 
-    for name, label in LABELS.items():
+    for name in LABELS.keys():
         model_path = MODELS_DIR / f"{name}.pkl"
 
         if not model_path.exists():

@@ -8,6 +8,7 @@ class PredictionService:
     def __init__(self, embedding_model: SentenceTransformer, classifiers: dict[str, LogisticRegression]):
         self.embedding_model = embedding_model
         self.classifiers = classifiers
+        print(self.classifiers.keys())
 
     def predict_batch(self, texts: list[str]) -> dict[str, list[int]] | None:
         """Размечаем всеми моделями"""
@@ -17,6 +18,6 @@ class PredictionService:
         predicts = {name: [] for name in self.classifiers.keys()}
         embeddings = self.embedding_model.encode(texts, show_progress_bar=False)
         for name, model in self.classifiers.items():
-            predicts[name] = np.array(model.predict(embeddings))
+            predicts[name] = model.predict(embeddings).tolist()
         
         return predicts
