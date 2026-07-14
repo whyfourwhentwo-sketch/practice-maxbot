@@ -17,6 +17,6 @@ RUN pip install --no-cache-dir --force-reinstall ./packages/shared
 
 COPY apps/api apps/api
 
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/apps/api
 
 CMD ["python", "-m", "api.app"]
