@@ -24,9 +24,11 @@ CREATE TABLE messages (
     id BIGSERIAL PRIMARY KEY,
     chat_id BIGINT NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    platform_message_id VARCHAR(100) NOT NULL,
     raw_text TEXT NOT NULL,          -- Сырой текст
     cleaned_text TEXT,               -- Очищенный текст (без эмодзи, ссылок и т.д.)
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_chat_platform_message UNIQUE (chat_id, platform_message_id)
 );
 
 -- 4. Таблица РЕЗУЛЬТАТОВ АНАЛИЗА (с учетом, что проблема может быть NULL)
@@ -95,4 +97,4 @@ CREATE INDEX idx_analysis_message_id ON analysis_results(message_id);
 CREATE INDEX idx_analysis_is_useful ON analysis_results(is_useful) WHERE is_useful = true;
 CREATE INDEX idx_analysis_sentiment ON analysis_results(sentiment) WHERE sentiment IS NOT NULL;
 CREATE INDEX idx_analysis_problem ON analysis_results(problem_category) WHERE problem_category IS NOT NULL; --Индекс только для не-NULL
-CREATE INDEX idx_analysis_critical ON analysis_results(is_critical) WHERE is_critical = true;Q
+CREATE INDEX idx_analysis_critical ON analysis_results(is_critical) WHERE is_critical = true;

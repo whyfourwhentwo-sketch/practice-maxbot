@@ -10,14 +10,17 @@ class PredictionService:
         self.classifiers = classifiers
         print(self.classifiers.keys())
 
-    def predict_batch(self, texts: list[str]) -> dict[str, list[int]] | None:
-        """Размечаем всеми моделями"""
+    def predict_batch(self, texts: list[str]) -> dict[str, list] | None:
+        """Размечаем всеми моделями, возвращаем метки и confidence."""
         if not texts:
             return None
-        
-        predicts = {name: [] for name in self.classifiers.keys()}
+
+        predicts: dict[str, list] = {}
         embeddings = self.embedding_model.encode(texts, show_progress_bar=False)
         for name, model in self.classifiers.items():
-            predicts[name] = model.predict(embeddings).tolist()
-        
+            preds = model.predict(embeddings)
+            probs = model.predict_proba(embeddings)
+            predicts[name] = preds.tolist()
+            predicts[f"{name}_confidence"] = [float(max(prob)) for prob in probs]
+
         return predicts

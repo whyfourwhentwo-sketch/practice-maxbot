@@ -1,3 +1,3 @@
-from shared.db.repository import StatsRepository
+from shared.db.repository import AnalysisRecord, StatsRepository
 
-__all__ = ["StatsRepository"]
+__all__ = ["AnalysisRecord", "StatsRepository"]

@@ -16,9 +16,10 @@ services:
       POSTGRES_PASSWORD: maxbot
       POSTGRES_DB: maxbot
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./packages/shared/shared/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U maxbot -d maxbot"]
       interval: 5s
@@ -49,6 +50,7 @@ services:
       - .env
     environment:
       REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://maxbot:maxbot@postgres:5432/maxbot
       DATA_DIR: /app/data
       ML_BATCH_SIZE: "8"
       PYTHONUNBUFFERED: "1"
@@ -56,6 +58,8 @@ services:
       - ./data:/app/data
     depends_on:
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     restart: unless-stopped
 

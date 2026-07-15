@@ -56,7 +56,7 @@ MAX_ITER = 1000
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://maxbot:maxbot@localhost:5432/maxbot",
+    "postgresql://maxbot:maxbot@localhost:5435/maxbot",
 )
 
 

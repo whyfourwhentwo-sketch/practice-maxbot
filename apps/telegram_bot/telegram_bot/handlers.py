@@ -28,6 +28,8 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
             chat_id=update.effective_chat.id,
             text=text,
             user_name=sender,
+            platform_user_id=update.effective_user.id,
+            chat_name=update.effective_chat.title or str(update.effective_chat.id),
             enqueued_at=datetime.now(timezone.utc).isoformat(),
         )
 

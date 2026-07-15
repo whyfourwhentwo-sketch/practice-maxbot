@@ -11,6 +11,9 @@ class InferenceMessage(BaseModel):
     chat_id: int
     text: str
     user_name: str = ""
+    platform: str = "tg"
+    platform_user_id: int | None = None
+    chat_name: str = ""
     enqueued_at: str = Field(default="", description="ISO timestamp")
 
 
