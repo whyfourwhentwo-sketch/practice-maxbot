@@ -63,8 +63,6 @@ poetry run python main.py -w
 poetry run python main.py -a
 ```
 
-На Linux/macOS замените `set` на `export`.
-
 ### 5. Обучение модели
 
 Запуск обучения моделей, требует Excel файл `data/excel/data_ml.xlsx`.
