@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+
 import os
 import signal
 
@@ -11,10 +11,11 @@ from shared.config import (
     ML_BATCH_SIZE,
 )
 from shared.db import StatsRepository
-from shared.queue import InferenceMessage, InferenceResultMessage, MessageBroker
-from shared.queue.broker import StreamEntry
-from shared.utils import format_prediction
-from .model_loader import load_classifier, load_embedding_model
+from shared.queue import InferenceMessage
+
+from shared.queue.broker import StreamEntry, MessageBroker
+from shared.queue import InferenceResultBatch, InferenceResultMessageTest
+from .model_loader import load_classifiers, load_embedding_model
 from .prediction import PredictionService
 
 
@@ -37,9 +38,8 @@ class MLWorker:
     def load_models(self) -> None:
         print("Loading embedding model and classifier...", flush=True)
         embedding_model = load_embedding_model()
-        classifier = load_classifier()
         print("Models loaded.", flush=True)
-        self._prediction_service = PredictionService(embedding_model, classifier)
+        self._prediction_service = PredictionService(embedding_model, load_classifiers())
         self._stats.connect()
 
     async def run(self) -> None:
@@ -73,27 +73,41 @@ class MLWorker:
 
         from shared.db.repository import PredictionRecord
 
-        records: list[PredictionRecord] = []
-        for entry, prediction in zip(entries, predictions):
+        # records: list[PredictionRecord] = []
+        batch_messages = []
+        for i, entry in enumerate(entries):
             message = entry.message
-            response = format_prediction(prediction)
-            result_message = InferenceResultMessage(
-                message_id=message.message_id,
-                chat_id=message.chat_id,
-                prediction=prediction,
-                response_text=response,
-                processed_at=datetime.now(timezone.utc).isoformat(),
+            batch_messages.append(
+                InferenceResultMessageTest(
+                    message_id=message.message_id,
+                    chat_id=message.chat_id,
+                )
             )
-            self._result_broker.publish(result_message)
-            records.append(PredictionRecord(
-                chat_id=message.chat_id,
-                message_id=message.message_id,
-                label=prediction,
-                text=message.text,
-            ))
-            print(f"Inference ready for chat {message.chat_id}: {response}")
+        
+        self._result_broker.publish(InferenceResultBatch(messages=batch_messages, predictions=predictions))
+                
+        # for entry, prediction in zip(entries, predictions):
+        #     message = entry.message
+        #     response = format_prediction(prediction)
+        #     result_message = InferenceResultMessage(
+        #         message_id=message.message_id,
+        #         chat_id=message.chat_id,
+        #         prediction=prediction,
+        #         response_text=response,
+        #         processed_at=datetime.now(timezone.utc).isoformat(),
+        #     )
+        #     self._result_broker.publish(result_message)
+            
+            # Потом переработаю под новую модель данных
+            # records.append(PredictionRecord(
+            #     chat_id=message.chat_id,
+            #     message_id=message.message_id,
+            #     label=prediction,
+            #     text=message.text,
+            # ))
+            # print(f"Inference ready for chat {message.chat_id}: {response}")
 
-        self._stats.save_batch(records)
+        #self._stats.save_batch(records)
         self._request_broker.ack([entry.entry_id for entry in entries])
 
     def stop(self) -> None:

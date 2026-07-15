@@ -1,5 +1,8 @@
 .env
+
 data/excel/**
 data/machine/**
+data/models/**
 __pycache__/
 .idea/
+.vscode/

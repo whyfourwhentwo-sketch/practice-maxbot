@@ -4,10 +4,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 
-from shared.config import MAX_ITER, MODEL_FILE, RANDOM_STATE, TEST_SIZE
+from shared.config import MAX_ITER, MODELS_DIR, RANDOM_STATE, TEST_SIZE
 
 
 def train_classifier(embeddings: np.ndarray, labels: np.ndarray) -> LogisticRegression:
+    
     X_train, X_test, y_train, y_test = train_test_split(
         embeddings,
         labels,
@@ -17,7 +18,6 @@ def train_classifier(embeddings: np.ndarray, labels: np.ndarray) -> LogisticRegr
     classifier = LogisticRegression(class_weight="balanced", max_iter=MAX_ITER)
     classifier.fit(X_train, y_train)
     evaluate_model(classifier, X_test, y_test)
-    save_model(classifier)
     return classifier
 
 
@@ -27,6 +27,6 @@ def evaluate_model(classifier: LogisticRegression, X_test: np.ndarray, y_test: n
     print(f"Classification Report:\n{classification_report(y_test, predictions)}")
 
 
-def save_model(classifier: LogisticRegression) -> None:
-    MODEL_FILE.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(classifier, MODEL_FILE)
+def save_model(name: str, classifier: LogisticRegression) -> None:
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    joblib.dump(classifier, MODELS_DIR / f"{name}.pkl")

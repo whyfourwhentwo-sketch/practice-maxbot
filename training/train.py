@@ -1,16 +1,18 @@
-"""CLI для обучения классификатора."""
+import numpy as np
 
-from training.data.prepare_data import prepare_data
-from training.model.model_train import train_classifier
+from training.data.safe_loader import load_data_safe
+from training.model.model_train import train_classifier, save_model
 
-
-def main() -> None:
-    print("Preparing training data...")
-    embeddings, labels = prepare_data()
-    print(f"Training on {len(labels)} samples...")
-    train_classifier(embeddings, labels)
-    print("Training complete.")
+"""CLI для обучения и сохранения моделей"""
 
 
-if __name__ == "__main__":
-    main()
+def train_main(args):
+    
+    embeddings, labels = load_data_safe(args.file)
+    
+    for name, label in labels.items():
+        print(f"Обучаем модель {name}")
+        classifier = train_classifier(embeddings, label)
+        save_model(name, classifier)
+        
+        

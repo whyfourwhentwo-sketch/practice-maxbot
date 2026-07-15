@@ -14,8 +14,9 @@ from shared.config import (
     INFERENCE_RESULT_CONSUMER_GROUP,
     INFERENCE_RESULT_STREAM,
     INFERENCE_STREAM,
+    LABELS
 )
-from shared.queue import InferenceResultMessage, MessageBroker
+from shared.queue import MessageBroker, InferenceResultBatch
 
 
 def setup_bot_data(app: Application) -> None:
@@ -36,31 +37,59 @@ async def send_results_job(context) -> None:
     result_broker: MessageBroker = app.bot_data["result_broker"]
     consumer_name: str = app.bot_data["result_consumer_name"]
 
-    entries = await asyncio.to_thread(
-        result_broker.read_batch,
-        consumer_name,
-        8,
-        200,
-        InferenceResultMessage,
-    )
-    if not entries:
-        return
+    print("[send_results_job] start")
+    try:
+        entries = await asyncio.to_thread(
+            result_broker.read_batch,
+            consumer_name,
+            8,
+            200,
+            InferenceResultBatch
+        )
+        print(f"[send_results_job] got {len(entries)} entries")
 
-    ack_ids: list[str] = []
-    for entry in entries:
-        message = entry.message
-        try:
-            await app.bot.send_message(
-                chat_id=message.chat_id,
-                text=message.response_text,
-                reply_parameters=ReplyParameters(message_id=message.message_id),
-            )
-            ack_ids.append(entry.entry_id)
-        except telegram.error.TelegramError as exc:
-            print(f"Failed to send result for chat {message.chat_id}: {exc}")
+        if not entries:
+            return
 
-    if ack_ids:
-        await asyncio.to_thread(result_broker.ack, ack_ids)
+        ack_ids: list[str] = []
+        for entry in entries:
+            try:
+                batch = entry.message
+                messages = batch.messages
+                predictions = batch.predictions
+            except Exception as exc:
+                print(f"[send_results_job] failed to parse entry {entry.entry_id}: {exc}")
+                continue
+
+            if not messages:
+                print(f"[send_results_job] empty batch messages for entry {entry.entry_id}")
+                continue
+
+            for i, message in enumerate(messages):
+                try:
+                    # ответ бота в продакшене не нужен
+                    await app.bot.send_message(
+                        chat_id=message.chat_id,
+                        text="\n".join(
+                            f"{name} : {LABELS[name][predictions[name][i]]}"
+                            for name in predictions
+                        ),
+                        reply_parameters=ReplyParameters(message_id=message.message_id)
+                    )
+                    print(f"[send_results_job] sent message {message.message_id} chat {message.chat_id}")
+                    ack_ids.append(entry.entry_id)
+                except telegram.error.TelegramError as exc:
+                    print(f"[send_results_job] Failed to send result for chat {message.chat_id}: {exc}")
+                except Exception as exc:
+                    print(f"[send_results_job] unexpected error sending message {message.message_id}: {exc}")
+
+        if ack_ids:
+            await asyncio.to_thread(result_broker.ack, ack_ids)
+            print(f"[send_results_job] acked {len(ack_ids)} entries")
+    except Exception as exc:
+        print(f"[send_results_job] unexpected error: {exc}")
+    finally:
+        print("[send_results_job] end")
 
 
 def register_handlers(app: Application) -> None:
@@ -92,8 +121,7 @@ def main() -> None:
     """Главная функция запуска бота."""
     app = create_application()
     setup_bot_data(app)
-
-    app.job_queue.run_repeating(send_results_job, interval=1.0, first=1.0)
+    app.job_queue.run_repeating(send_results_job, interval=2.0, first=1.0)
 
     print("Бот запущен и слушает сообщения...")
 
