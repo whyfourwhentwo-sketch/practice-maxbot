@@ -1,32 +1,41 @@
 # Бот-градусник
 
-Telegram-бот классифицирует сообщения в групповых чатах как «Полезное» / «Бесполезное».
+Микросервисный ИИ сервис мониторинга настроения, проблем и потребностей жителей ЖКХ за счет анализа домовых чатов, а также подведения статистики по чатам 
 
 ## Структура
 
 ```
-practice-maxbot/
+.
 ├── apps/
 │   ├── api/
-│   │   └── api/
+│   │   └── api
 │   ├── ml_worker/
 │   │   └── ml_worker/
 │   └── telegram_bot/
-│       └── telegram_bot/
-├── packages/
-│   └── shared/
-│       └── shared/
-├── training/
+│       └── telegrambot/
 ├── data/
 │   ├── excel/
 │   ├── machine/
 │   └── models/
-├── frontend/
+├── frontend_charts/
+│   ├── public/
+│   └── src/
+│       └── components/
+├── packages/
+│   └── shared/
+│       ├── db/
+│       ├── queue/
+│       └── utils/
+├── training/
+│   ├── data/
+│   └── model/
+├── .env_example
+├── build_ml_worker.log
 ├── docker-compose.yml
 ├── main.py
-├── pyproject.toml
 ├── poetry.lock
-└── README.md
+├── README.md
+└── TODO.md
 ```
 
 ## Быстрый старт (локально)
@@ -47,6 +56,11 @@ cp .env-example .env
 
 ### 3. Redis
 
+Для локального запуска подойдет memurai
+
+
+Запуск через докер
+
 ```bash
 docker compose up redis -d
 ```
@@ -62,6 +76,10 @@ poetry run python main.py -w
 
 # Терминал 3 — API
 poetry run python main.py -a
+
+# Терминал 4 — Фронтенд
+cd forntend_charts
+npm run
 ```
 
 ### 5. Обучение модели

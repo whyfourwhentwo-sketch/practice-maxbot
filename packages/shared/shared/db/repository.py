@@ -162,9 +162,33 @@ class StatsRepository:
                 record.is_critical,
             ),
         )
+        
+  
+    def get_all_stats(self, chat_id_global: int, date_from: datetime, date_to: datetime) -> dict[str, ]:
+        
+        try:
+            chat_id = self.get_local_chat_id(chat_id_global)
+        except Exception as e:
+            print(f"Ошибка: Некорректный айди: {e}")
+            return {
+                "code" : 404
+            }
+            
+        # sentiment_pie = self.get_sentiment_distribution(chat_id, date_from, date_to)
+        # sentiment_histogram = self.get_sentiment_by_day(chat_id, date_from, date_to)
+        # problems = self.get_problem_categories(chat_id, date_from, date_to)
+        # top_users = self.get_top_users(chat_id, date_from, date_to)
+        
+        return {
+            "code" : 200,
+            "chat_id": chat_id,
+            "sentiment_pie": self.get_sentiment_distribution(chat_id, date_from, date_to),
+            "sentiment_histogram": self.get_sentiment_by_day(chat_id, date_from, date_to),
+            "problems": self.get_problem_categories(chat_id, date_from, date_to),
+            "top_users": self.get_top_users(chat_id, date_from, date_to),
+        }
 
-
-    def get_local_chat_id(self, chat_id: str) -> int:
+    def get_local_chat_id(self, chat_id: str) -> str:
             """
             Преобразование глобального чат айди в локальный
             
@@ -179,21 +203,16 @@ class StatsRepository:
             """
 
             with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
-                try:
-                    row = conn.execute(query, (chat_id,)).fetchone()
-                    print(row)
-                    print(type(row))
+                    row = conn.execute(query, chat_id).fetchone()
+                    if(row is None):
+                        return 1
                     chat_id_local = row['id'] #Тут нужно при неправильном айди присылать соответствующий ответ
 
                     return chat_id_local
 
-                except Exception as e:
-                    print(f"Некорректный айди: {e}")
-                    raise
-
                 
     
-    def _get_where_clause(self, chat_id: int, date_from: datetime, date_to: datetime) -> tuple[str, tuple]:
+    def _get_where_clause(self, chat_id: str, date_from: datetime, date_to: datetime) -> tuple[str, tuple]:
         """Вспомогательный метод для формирования условия WHERE"""
         return "m.chat_id = %s AND ar.analyzed_at BETWEEN %s AND %s" , (chat_id, date_from, date_to)
         

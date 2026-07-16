@@ -42,13 +42,7 @@ def create_app() -> Flask:
         if cached is not None:
             return jsonify({**cached, "cached": True})
 
-        payload = {
-            "chat_id": chat_id,
-            "sentiment_pie": stats_repo.get_sentiment_distribution(chat_id, date_from, date_to),
-            "sentiment_histogram": stats_repo.get_sentiment_by_day(chat_id, date_from, date_to),
-            "problems": stats_repo.get_problem_categories(chat_id, date_from, date_to),
-            "top_users": stats_repo.get_top_users(chat_id, date_from, date_to),
-        }
+        payload = stats_repo.get_all_stats(chat_id, date_from, date_to)
         cache.set_stats(cache_key, payload)
         return jsonify({**payload, "cached": False})
 
@@ -58,7 +52,7 @@ def create_app() -> Flask:
     def home():
         return jsonify({
             "service": "practice-maxbot-api",
-            "endpoints": ["/health", "/stats?chat_id=<id>", "/results?limit=<n>"],
+            "endpoints": ["/health", "/stats?chat_id=<id>&date_from=<date>&date_to=<date>"], 
         })
 
     return app

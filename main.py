@@ -28,6 +28,3 @@ if __name__ == "__main__":
         worker.main()
     if(args.api):
         api.main() 
-    else:
-        print("Запуск бота")
-        main()

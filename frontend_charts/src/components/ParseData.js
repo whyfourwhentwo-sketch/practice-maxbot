@@ -91,9 +91,16 @@ const generateColor = (index, total) => `hsl(${(index * 360 / total)}, 65%, 55%)
 
 export const ParseData = (api_response) => {
     console.log(api_response)
+
+    if(api_response.code == 404){
+      throw new Error("Айди чата не найден")
+    }
+
+
+    
     const problems_total = api_response.problems.length;
 
-
+    
 
     return ({
 

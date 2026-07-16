@@ -43,6 +43,9 @@ LABELS = { # модели создаются на базе этого парам
     "sentiment": ["+", "-", "="],
     #"category": ["category1", "category2", "category3"], #WIP
 }
+LABELS_RELATIONS = { # связи между моделями (WIP)
+    #"category": {"based_on": "useful", "filtering_label": 1}
+}
 
 
 """Для моделей"""
@@ -53,6 +56,7 @@ RANDOM_STATE = 42
 MAX_ITER = 1000
 
 
+"""База данных"""
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
@@ -60,7 +64,7 @@ DATABASE_URL = os.getenv(
 )
 
 
-"""Что это вообще"""
+"""Redis"""
 INFERENCE_STREAM = os.getenv("INFERENCE_STREAM", "inference:messages")
 INFERENCE_CONSUMER_GROUP = os.getenv("INFERENCE_CONSUMER_GROUP", "ml-workers")
 INFERENCE_RESULT_STREAM = os.getenv("INFERENCE_RESULT_STREAM", "inference:results")

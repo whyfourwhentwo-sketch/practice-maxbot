@@ -51,7 +51,14 @@ function Dashboard() {
     if(response.ok){
       let json = await response.json()
       console.log(json)
-      setData(ParseData(json))
+      try{
+        let response_data = ParseData(json)
+        setData(response_data)
+      }
+      catch (e) {
+        alert(`${e.message}, будет использованы Mock данные`)      
+      }
+      
       
     }
     setShowResults(true);
