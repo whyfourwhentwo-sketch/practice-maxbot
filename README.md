@@ -21,10 +21,7 @@ practice-maxbot/
 │   ├── excel/
 │   ├── machine/
 │   └── models/
-├── frontend_charts/
-│   ├── public/
-│   └── src/
-│       └── components/
+├── frontend/
 ├── docker-compose.yml
 ├── main.py
 ├── pyproject.toml
@@ -37,8 +34,8 @@ practice-maxbot/
 ### 1. Зависимости
 
 ```bash
-poetry install  # бэк
-npm install     # фронт
+poetry install # бэк
+npm install    # фронт
 ```
 
 ### 2. Переменные окружения
@@ -66,8 +63,6 @@ poetry run python main.py -w
 # Терминал 3 — API
 poetry run python main.py -a
 ```
-
-На Linux/macOS замените `set` на `export`.
 
 ### 5. Обучение модели
 
@@ -110,19 +105,17 @@ LABELS = { # модели создаются на базе этого парам
 Пожалуйста, не смешивайте аргументы (кроме `-t` и `-f`)
 
 
-### 7. Фроентенд (WIP)
+### 7. Фронтенд
 
-В данный момент находится в околозачаточном состоянии.
-
-Запуск через HTTP-сервер (рекомендуется):
+Запуск через npm:
 ```bash
-cd frontend
-python -m http.server 5500
+cd frontend_charts
+npm run
+
+# http://localhost:3000/
+# npm откроет страницу самостоятельно
 ```
 
-Затем открой в браузере `http://127.0.0.1:5500/index.html`.
-
-Если фронтенд и API работают с разных портов, нужно включить CORS на API-сервере.
 ## Docker (Может не работать)
 
 ```bash
