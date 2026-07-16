@@ -121,7 +121,7 @@ function Dashboard() {
   const [endDate, setEndDate] = useState('');
   const [showResults, setShowResults] = useState(false);
 
-  const handleShowResults = () => {
+  const handleShowResults = async () => {
     if (!chatId) {
       alert('Пожалуйста, введите ID чата');
       return;
@@ -129,6 +129,11 @@ function Dashboard() {
     if (!startDate || !endDate) {
       alert('Пожалуйста, выберите даты');
       return;
+    }
+    let response = await fetch(`http://127.0.0.1:5000/stats?chat_id=${chatId}`)
+    if(response.ok){
+      let json = await response.json()
+      console.log(json)
     }
     setShowResults(true);
   };
