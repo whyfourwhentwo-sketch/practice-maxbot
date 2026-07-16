@@ -26,7 +26,7 @@ def create_app() -> Flask:
 
     @app.get("/stats")
     def stats():
-        chat_id = request.args.get("chat_id", type=int)
+        chat_id = request.args.get("chat_id", type=str)
         date_from = request.args.get("date_from")
         date_to = request.args.get("date_to")
         

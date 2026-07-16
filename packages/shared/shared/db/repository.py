@@ -164,32 +164,31 @@ class StatsRepository:
         )
 
 
-    def get_local_chat_id(self, chat_id = None) -> int:
+    def get_local_chat_id(self, chat_id: str) -> int:
             """
             Преобразование глобального чат айди в локальный
             
             Вызывать везде, где фигурирует локальный чат айди
             """
         
-            query = f"""
+            query = """
             SELECT 
                 id
                 FROM chats
-                WHERE platform_chat_id = '{chat_id}'
+                WHERE platform_chat_id = %s
             """
 
             with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
                 try:
-                    row = conn.execute(query=query, params=()).fetchone()
-                    if row is None:
-                        return self._empty_stats(chat_id)
-
-                    chat_id_local = row['id']
+                    row = conn.execute(query, (chat_id,)).fetchone()
+                    print(row)
+                    print(type(row))
+                    chat_id_local = row['id'] #Тут нужно при неправильном айди присылать соответствующий ответ
 
                     return chat_id_local
 
                 except Exception as e:
-                    print(f"Database error in get_chat_stats: {e}")
+                    print(f"Некорректный айди: {e}")
                     raise
 
                 
@@ -199,7 +198,7 @@ class StatsRepository:
         return "m.chat_id = %s AND ar.analyzed_at BETWEEN %s AND %s" , (chat_id, date_from, date_to)
         
 
-    def get_sentiment_distribution(self, chat_id_global: int, date_from: datetime, date_to: datetime) -> dict[str, float]:
+    def get_sentiment_distribution(self, chat_id_global: str, date_from: datetime, date_to: datetime) -> dict[str, float]:
         """Проценты настроений для Pie-диаграммы"""
         
         chat_id = self.get_local_chat_id(chat_id_global)
@@ -228,7 +227,7 @@ class StatsRepository:
             "neutral": row["neutral"],
         }
 
-    def get_sentiment_by_day(self, chat_id_global, date_from: datetime, date_to: datetime) -> list[dict[str, Any]]:
+    def get_sentiment_by_day(self, chat_id_global: str, date_from: datetime, date_to: datetime) -> list[dict[str, Any]]:
         """Массив настроений по дням для гистограммы"""
         
         chat_id = self.get_local_chat_id(chat_id_global)
@@ -260,7 +259,7 @@ class StatsRepository:
             for row in rows
         ]
 
-    def get_problem_categories(self, chat_id_global: int, date_from: datetime, date_to: datetime) -> list[dict[str, Any]]:
+    def get_problem_categories(self, chat_id_global: str, date_from: datetime, date_to: datetime) -> list[dict[str, Any]]:
         """Массив категорий проблем для диаграммы"""
         
         chat_id = self.get_local_chat_id(chat_id_global)
@@ -282,7 +281,7 @@ class StatsRepository:
 
         return [{"category": row["problem_category"], "count": row["count"]} for row in rows]
 
-    def get_top_users(self, chat_id_global: int, date_from: datetime, date_to: datetime) -> dict[str, list[dict[str, Any]]]:
+    def get_top_users(self, chat_id_global: str, date_from: datetime, date_to: datetime) -> dict[str, list[dict[str, Any]]]:
         """Топ пользователей: самые активные, позитивные и негативные"""
         
         chat_id = self.get_local_chat_id(chat_id_global)
@@ -332,7 +331,7 @@ class StatsRepository:
             "most_negative": [dict(row) for row in negative],
         }
     
-    def get_chat_stats(self, chat_global_id: int | None = None) -> dict[str, Any]:
+    def get_chat_stats(self, chat_global_id: str | None = None) -> dict[str, Any]:
         # Базовая часть запроса одинакова для обоих случаев
         
         chat_id = self.get_local_chat_id(chat_id=chat_global_id)
