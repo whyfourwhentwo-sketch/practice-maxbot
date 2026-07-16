@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "shared"
+version = "0.1.0"
+description = "Shared config, queue broker, and utilities"
+authors = ["Faspeice <154542847+Faspeice@users.noreply.github.com>"]
+packages = [{include = "shared"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+python-dotenv = "^1.2.2"
+redis = "^5.2.1"
+pydantic = "^2.10.6"
+psycopg = {extras = ["binary"], version = "^3.2.9"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

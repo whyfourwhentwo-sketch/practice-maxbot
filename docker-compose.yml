@@ -1,0 +1,95 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: maxbot
+      POSTGRES_PASSWORD: maxbot
+      POSTGRES_DB: maxbot
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/shared/shared/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maxbot -d maxbot"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+#  telegram-bot:
+#    build:
+#      context: .
+#      dockerfile: apps/telegram_bot/Dockerfile
+#    env_file:
+#      - .env
+#    environment:
+#      REDIS_URL: redis://redis:6379/0
+#      PYTHONUNBUFFERED: "1"
+#    volumes:
+#      - ./apps/telegram_bot:/app/apps/telegram_bot
+#    depends_on:
+#      redis:
+#        condition: service_healthy
+#    restart: unless-stopped
+
+  ml-worker:
+    build:
+      context: .
+      dockerfile: apps/ml_worker/Dockerfile
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://maxbot:maxbot@postgres:5432/maxbot
+      DATA_DIR: /app/data
+      ML_BATCH_SIZE: "8"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://maxbot:maxbot@postgres:5432/maxbot
+      API_HOST: 0.0.0.0
+      API_PORT: "5000"
+    ports:
+      - "5000:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend-charts:
+    build:
+      context: ./frontend_charts
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
