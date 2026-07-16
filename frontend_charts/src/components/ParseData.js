@@ -1,5 +1,5 @@
 
-const mockData = {
+export const mockData = {
   // Данные для круговой диаграммы (настроение)
   mood: {
     labels: ['Позитивное', 'Нейтральное', 'Негативное'],
@@ -89,7 +89,7 @@ const sentiment_labels = {
 
 const generateColor = (index, total) => `hsl(${(index * 360 / total)}, 65%, 55%)`
 
-const ParseData = (api_response) => {
+export const ParseData = (api_response) => {
     console.log(api_response)
     const problems_total = api_response.problems.length;
 
@@ -153,4 +153,3 @@ const ParseData = (api_response) => {
 }
 
 
-export default ParseData

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from datetime import datetime
 
 import psycopg
 from psycopg.rows import dict_row
@@ -192,18 +193,17 @@ class StatsRepository:
                     raise
 
                 
-                
-    def _get_where_clause(self, chat_id: int | None) -> tuple[str, tuple]:
+    
+    def _get_where_clause(self, chat_id: int, date_from: datetime, date_to: datetime) -> tuple[str, tuple]:
         """Вспомогательный метод для формирования условия WHERE"""
-        if chat_id is not None:
-            return "WHERE m.chat_id = %s", (chat_id,)
-        return "", ()
+        return "m.chat_id = %s AND ar.analyzed_at BETWEEN %s AND %s" , (chat_id, date_from, date_to)
+        
 
-    def get_sentiment_distribution(self, chat_id_global: int | None) -> dict[str, float]:
+    def get_sentiment_distribution(self, chat_id_global: int, date_from: datetime, date_to: datetime) -> dict[str, float]:
         """Проценты настроений для Pie-диаграммы"""
         
         chat_id = self.get_local_chat_id(chat_id_global)
-        where, params = self._get_where_clause(chat_id)
+        where, params = self._get_where_clause(chat_id, date_from, date_to)
         query = f"""
             SELECT
                 COUNT(*) AS total,
@@ -212,7 +212,7 @@ class StatsRepository:
                 COUNT(*) FILTER (WHERE ar.sentiment = 'neutral') AS neutral
             FROM messages m
             JOIN analysis_results ar ON ar.message_id = m.id
-            {where}
+            WHERE {where}
         """
 
         with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
@@ -228,11 +228,11 @@ class StatsRepository:
             "neutral": row["neutral"],
         }
 
-    def get_sentiment_by_day(self, chat_id_global: int | None) -> list[dict[str, Any]]:
+    def get_sentiment_by_day(self, chat_id_global, date_from: datetime, date_to: datetime) -> list[dict[str, Any]]:
         """Массив настроений по дням для гистограммы"""
         
         chat_id = self.get_local_chat_id(chat_id_global)
-        where, params = self._get_where_clause(chat_id)
+        where, params = self._get_where_clause(chat_id, date_from, date_to)
         query = f"""
             SELECT
                 DATE(m.created_at) AS stat_date,
@@ -241,7 +241,7 @@ class StatsRepository:
                 COUNT(*) FILTER (WHERE ar.sentiment = 'neutral') AS neutral
             FROM messages m
             JOIN analysis_results ar ON ar.message_id = m.id
-            {where}
+            WHERE {where}
             GROUP BY DATE(m.created_at)
             ORDER BY stat_date
         """
@@ -260,21 +260,19 @@ class StatsRepository:
             for row in rows
         ]
 
-    def get_problem_categories(self, chat_id_global: int | None) -> list[dict[str, Any]]:
+    def get_problem_categories(self, chat_id_global: int, date_from: datetime, date_to: datetime) -> list[dict[str, Any]]:
         """Массив категорий проблем для диаграммы"""
         
         chat_id = self.get_local_chat_id(chat_id_global)
         # Если chat_id есть, фильтруем по нему. Если нет - берем все.
-        condition = "m.chat_id = %s" if chat_id is not None else "1=1"
-        params = (chat_id,) if chat_id is not None else ()
-
+        where, params = self._get_where_clause(chat_id, date_from, date_to)
         query = f"""
             SELECT
                 ar.problem_category,
                 COUNT(*) AS count
             FROM messages m
             JOIN analysis_results ar ON ar.message_id = m.id
-            WHERE {condition} AND ar.problem_category IS NOT NULL
+            WHERE {where} AND ar.problem_category IS NOT NULL
             GROUP BY ar.problem_category
             ORDER BY count DESC
         """
@@ -284,19 +282,19 @@ class StatsRepository:
 
         return [{"category": row["problem_category"], "count": row["count"]} for row in rows]
 
-    def get_top_users(self, chat_id_global: int | None) -> dict[str, list[dict[str, Any]]]:
+    def get_top_users(self, chat_id_global: int, date_from: datetime, date_to: datetime) -> dict[str, list[dict[str, Any]]]:
         """Топ пользователей: самые активные, позитивные и негативные"""
         
         chat_id = self.get_local_chat_id(chat_id_global)
-        condition = "m.chat_id = %s" if chat_id is not None else "1=1"
-        params = (chat_id,) if chat_id is not None else ()
+        where, params = self._get_where_clause(chat_id, date_from, date_to)
 
         # 1. Самые активные (по общему кол-ву сообщений)
         q_active = f"""
             SELECT u.id AS user_id, u.user_name, COUNT(m.id) AS count
             FROM messages m
             JOIN users u ON u.id = m.user_id
-            WHERE {condition}
+            JOIN analysis_results ar ON m.id = ar.message_id
+            WHERE {where}
             GROUP BY u.id, u.user_name
             ORDER BY count DESC LIMIT 10
         """
@@ -307,7 +305,7 @@ class StatsRepository:
             FROM messages m
             JOIN users u ON u.id = m.user_id
             JOIN analysis_results ar ON ar.message_id = m.id
-            WHERE {condition} AND ar.sentiment = 'positive'
+            WHERE {where} AND ar.sentiment = 'positive'
             GROUP BY u.id, u.user_name
             ORDER BY count DESC LIMIT 10
         """
@@ -318,7 +316,7 @@ class StatsRepository:
             FROM messages m
             JOIN users u ON u.id = m.user_id
             JOIN analysis_results ar ON ar.message_id = m.id
-            WHERE {condition} AND ar.sentiment = 'negative'
+            WHERE {where} AND ar.sentiment = 'negative'
             GROUP BY u.id, u.user_name
             ORDER BY count DESC LIMIT 10
         """

@@ -5,7 +5,7 @@ from .cache import StatsCache
 from shared.config import API_HOST, API_PORT, INFERENCE_RESULT_STREAM, INFERENCE_RESULT_CONSUMER_GROUP
 from shared.db import StatsRepository
 from shared.queue import MessageBroker
-
+from datetime import datetime
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -27,17 +27,27 @@ def create_app() -> Flask:
     @app.get("/stats")
     def stats():
         chat_id = request.args.get("chat_id", type=int)
-        cache_key = f"stats:{chat_id or 'all'}"
+        date_from = request.args.get("date_from")
+        date_to = request.args.get("date_to")
+        
+        if date_from and date_to:
+            date_from = datetime.strptime(date_from, '%Y-%m-%d').date()
+            date_to = datetime.strptime(date_to, '%Y-%m-%d').date()
+            
+        print(date_from)
+        print(date_to)
+        
+        cache_key = f"stats:{f"{chat_id}-{date_from}-{date_to}" or 'all'}"
         cached = cache.get_stats(cache_key)
         if cached is not None:
             return jsonify({**cached, "cached": True})
 
         payload = {
             "chat_id": chat_id,
-            "sentiment_pie": stats_repo.get_sentiment_distribution(chat_id),
-            "sentiment_histogram": stats_repo.get_sentiment_by_day(chat_id),
-            "problems": stats_repo.get_problem_categories(chat_id),
-            "top_users": stats_repo.get_top_users(chat_id)
+            "sentiment_pie": stats_repo.get_sentiment_distribution(chat_id, date_from, date_to),
+            "sentiment_histogram": stats_repo.get_sentiment_by_day(chat_id, date_from, date_to),
+            "problems": stats_repo.get_problem_categories(chat_id, date_from, date_to),
+            "top_users": stats_repo.get_top_users(chat_id, date_from, date_to),
         }
         cache.set_stats(cache_key, payload)
         return jsonify({**payload, "cached": False})
