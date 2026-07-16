@@ -162,6 +162,139 @@ class StatsRepository:
             ),
         )
 
+    def _get_where_clause(self, chat_id: int | None) -> tuple[str, tuple]:
+        """Вспомогательный метод для формирования условия WHERE"""
+        if chat_id is not None:
+            return "WHERE m.chat_id = %s", (chat_id,)
+        return "", ()
+
+    def get_sentiment_distribution(self, chat_id: int | None) -> dict[str, float]:
+        """Проценты настроений для Pie-диаграммы"""
+        where, params = self._get_where_clause(chat_id)
+        query = f"""
+            SELECT
+                COUNT(*) AS total,
+                COUNT(*) FILTER (WHERE ar.sentiment = 'positive') AS positive,
+                COUNT(*) FILTER (WHERE ar.sentiment = 'negative') AS negative,
+                COUNT(*) FILTER (WHERE ar.sentiment = 'neutral') AS neutral
+            FROM messages m
+            JOIN analysis_results ar ON ar.message_id = m.id
+            {where}
+        """
+
+        with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
+            row = conn.execute(query, params).fetchone()
+
+        if not row or row["total"] == 0:
+            return {"positive": 0.0, "negative": 0.0, "neutral": 0.0}
+
+        total = row["total"]
+        return {
+            "positive": round((row["positive"] / total) * 100, 2),
+            "negative": round((row["negative"] / total) * 100, 2),
+            "neutral": round((row["neutral"] / total) * 100, 2),
+        }
+
+    def get_sentiment_by_day(self, chat_id: int | None) -> list[dict[str, Any]]:
+        """Массив настроений по дням для гистограммы"""
+        where, params = self._get_where_clause(chat_id)
+        query = f"""
+            SELECT
+                DATE(m.created_at) AS stat_date,
+                COUNT(*) FILTER (WHERE ar.sentiment = 'positive') AS positive,
+                COUNT(*) FILTER (WHERE ar.sentiment = 'negative') AS negative,
+                COUNT(*) FILTER (WHERE ar.sentiment = 'neutral') AS neutral
+            FROM messages m
+            JOIN analysis_results ar ON ar.message_id = m.id
+            {where}
+            GROUP BY DATE(m.created_at)
+            ORDER BY stat_date
+        """
+
+        with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
+            rows = conn.execute(query, params).fetchall()
+
+        # Конвертируем date в строку для корректной сериализации в JSON
+        return [
+            {
+                "date": row["stat_date"].isoformat(),
+                "positive": row["positive"],
+                "negative": row["negative"],
+                "neutral": row["neutral"]
+            }
+            for row in rows
+        ]
+
+    def get_problem_categories(self, chat_id: int | None) -> list[dict[str, Any]]:
+        """Массив категорий проблем для диаграммы"""
+        # Если chat_id есть, фильтруем по нему. Если нет - берем все.
+        condition = "m.chat_id = %s" if chat_id is not None else "1=1"
+        params = (chat_id,) if chat_id is not None else ()
+
+        query = f"""
+            SELECT
+                ar.problem_category,
+                COUNT(*) AS count
+            FROM messages m
+            JOIN analysis_results ar ON ar.message_id = m.id
+            WHERE {condition} AND ar.problem_category IS NOT NULL
+            GROUP BY ar.problem_category
+            ORDER BY count DESC
+        """
+
+        with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
+            rows = conn.execute(query, params).fetchall()
+
+        return [{"category": row["problem_category"], "count": row["count"]} for row in rows]
+
+    def get_top_users(self, chat_id: int | None) -> dict[str, list[dict[str, Any]]]:
+        """Топ пользователей: самые активные, позитивные и негативные"""
+        condition = "m.chat_id = %s" if chat_id is not None else "1=1"
+        params = (chat_id,) if chat_id is not None else ()
+
+        # 1. Самые активные (по общему кол-ву сообщений)
+        q_active = f"""
+            SELECT u.id AS user_id, u.user_name, COUNT(m.id) AS count
+            FROM messages m
+            JOIN users u ON u.id = m.user_id
+            WHERE {condition}
+            GROUP BY u.id, u.user_name
+            ORDER BY count DESC LIMIT 10
+        """
+
+        # 2. Самые позитивные (по кол-ву сообщений с sentiment='positive')
+        q_positive = f"""
+            SELECT u.id AS user_id, u.user_name, COUNT(m.id) AS count
+            FROM messages m
+            JOIN users u ON u.id = m.user_id
+            JOIN analysis_results ar ON ar.message_id = m.id
+            WHERE {condition} AND ar.sentiment = 'positive'
+            GROUP BY u.id, u.user_name
+            ORDER BY count DESC LIMIT 10
+        """
+
+        # 3. Самые негативные (по кол-ву сообщений с sentiment='negative')
+        q_negative = f"""
+            SELECT u.id AS user_id, u.user_name, COUNT(m.id) AS count
+            FROM messages m
+            JOIN users u ON u.id = m.user_id
+            JOIN analysis_results ar ON ar.message_id = m.id
+            WHERE {condition} AND ar.sentiment = 'negative'
+            GROUP BY u.id, u.user_name
+            ORDER BY count DESC LIMIT 10
+        """
+
+        with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
+            active = conn.execute(q_active, params).fetchall()
+            positive = conn.execute(q_positive, params).fetchall()
+            negative = conn.execute(q_negative, params).fetchall()
+
+        return {
+            "most_active": [dict(row) for row in active],
+            "most_positive": [dict(row) for row in positive],
+            "most_negative": [dict(row) for row in negative],
+        }
+
     def get_chat_stats(self, chat_id: int | None = None) -> dict[str, Any]:
         # Базовая часть запроса одинакова для обоих случаев
         base_query = """

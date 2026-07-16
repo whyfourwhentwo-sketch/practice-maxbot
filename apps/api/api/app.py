@@ -32,7 +32,13 @@ def create_app() -> Flask:
         if cached is not None:
             return jsonify({**cached, "cached": True})
 
-        payload = stats_repo.get_chat_stats(chat_id)
+        payload = {
+            "chat_id": chat_id,
+            "sentiment_pie": stats_repo.get_sentiment_distribution(chat_id),
+            "sentiment_histogram": stats_repo.get_sentiment_by_day(chat_id),
+            "problems": stats_repo.get_problem_categories(chat_id),
+            "top_users": stats_repo.get_top_users(chat_id)
+        }
         cache.set_stats(cache_key, payload)
         return jsonify({**payload, "cached": False})
 
