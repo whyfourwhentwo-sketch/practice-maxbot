@@ -13,6 +13,7 @@ import {
   Legend,
 } from 'chart.js';
 import './Dashboard.css';
+import ParseData from './ParseData';
 
 // Регистрируем компоненты Chart.js
 ChartJS.register(
@@ -120,6 +121,8 @@ function Dashboard() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [data, setData] = useState(mockData);
+
 
   const handleShowResults = async () => {
     if (!chatId) {
@@ -134,17 +137,19 @@ function Dashboard() {
     if(response.ok){
       let json = await response.json()
       console.log(json)
+      setData(ParseData(json))
+      
     }
     setShowResults(true);
   };
 
   // Конфигурация круговой диаграммы (настроение)
   const pieChartData = {
-    labels: mockData.mood.labels,
+    labels: data.mood.labels,
     datasets: [
       {
-        data: mockData.mood.values,
-        backgroundColor: mockData.mood.colors,
+        data: data.mood.values,
+        backgroundColor: data.mood.colors,
         borderColor: '#fff',
         borderWidth: 3,
         hoverOffset: 8,
@@ -180,8 +185,8 @@ function Dashboard() {
 
   // Конфигурация линейной диаграммы (изменение настроения по дням)
   const lineChartData = {
-    labels: mockData.moodDynamics.labels,
-    datasets: mockData.moodDynamics.datasets,
+    labels: data.moodDynamics.labels,
+    datasets: data.moodDynamics.datasets,
   };
 
   const lineOptions = {
@@ -234,13 +239,13 @@ function Dashboard() {
 
   // Конфигурация столбчатой диаграммы (проблемы)
   const barChartData = {
-    labels: mockData.problems.labels,
+    labels: data.problems.labels,
     datasets: [
       {
         label: 'Количество обращений',
-        data: mockData.problems.values,
-        backgroundColor: mockData.problems.colors,
-        borderColor: mockData.problems.colors.map(c => c),
+        data: data.problems.values,
+        backgroundColor: data.problems.colors,
+        borderColor: data.problems.colors.map(c => c),
         borderWidth: 2,
         borderRadius: 6,
         maxBarThickness: 40,
@@ -351,9 +356,7 @@ function Dashboard() {
               <div className="chart-header">
                 <div className="chart-title-group">
                   <h3 className="chart-title">Распределение настроений</h3>
-                  <span className="chart-date-range">
-                    {mockData.mood.dateRange.from} — {mockData.mood.dateRange.to}
-                  </span>
+                  
                 </div>
               </div>
               <div className="chart-body pie-chart-body">
@@ -378,7 +381,7 @@ function Dashboard() {
               <div className="chart-title-group">
                 <h3 className="chart-title">Количество обращений по проблемам</h3>
                 <span className="chart-total-badge">
-                  Всего: {mockData.problems.total} обращений
+                  Всего: {data.problems.total} обращений
                 </span>
               </div>
             </div>
@@ -395,7 +398,7 @@ function Dashboard() {
               <div className="top-users-card">
                 <h4 className="top-users-card-title">Самые активные</h4>
                 <div className="top-users-list">
-                  {mockData.topUsers.active.map((user, index) => (
+                  {data.topUsers.active.map((user, index) => (
                     <div key={index} className="top-user-item">
                       <span className="top-user-rank">{index + 1}</span>
                       <span className="top-user-name">{user.name}</span>
@@ -409,7 +412,7 @@ function Dashboard() {
               <div className="top-users-card positive">
                 <h4 className="top-users-card-title">Самые позитивные</h4>
                 <div className="top-users-list">
-                  {mockData.topUsers.positive.map((user, index) => (
+                  {data.topUsers.positive.map((user, index) => (
                     <div key={index} className="top-user-item">
                       <span className="top-user-rank">{index + 1}</span>
                       <span className="top-user-name">{user.name}</span>
@@ -423,7 +426,7 @@ function Dashboard() {
               <div className="top-users-card negative">
                 <h4 className="top-users-card-title">Самые негативные</h4>
                 <div className="top-users-list">
-                  {mockData.topUsers.negative.map((user, index) => (
+                  {data.topUsers.negative.map((user, index) => (
                     <div key={index} className="top-user-item">
                       <span className="top-user-rank">{index + 1}</span>
                       <span className="top-user-name">{user.name}</span>

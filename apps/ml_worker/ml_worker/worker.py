@@ -15,7 +15,6 @@ from shared.db.repository import SENTIMENT_LABELS
 from shared.queue import InferenceMessage
 
 from shared.queue.broker import StreamEntry, MessageBroker
-from shared.queue import InferenceResultBatch, InferenceResultMessageTest
 from .model_loader import load_classifiers, load_embedding_model
 from .prediction import PredictionService
 
@@ -103,15 +102,9 @@ class MLWorker:
             return
 
         records: list[AnalysisRecord] = []
-        batch_messages = []
         for i, entry in enumerate(entries):
             message = entry.message
-            batch_messages.append(
-                InferenceResultMessageTest(
-                    message_id=message.message_id,
-                    chat_id=message.chat_id,
-                )
-            )
+            
             records.append(
                 _build_analysis_record(
                     message=message,
@@ -122,9 +115,6 @@ class MLWorker:
                 )
             )
 
-        self._result_broker.publish(
-            InferenceResultBatch(messages=batch_messages, predictions=predictions)
-        )
         self._stats.save_batch(records)
         self._request_broker.ack([entry.entry_id for entry in entries])
 

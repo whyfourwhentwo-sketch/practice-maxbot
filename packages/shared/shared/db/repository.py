@@ -162,14 +162,47 @@ class StatsRepository:
             ),
         )
 
+
+    def get_local_chat_id(self, chat_id = None) -> int:
+            """
+            Преобразование глобального чат айди в локальный
+            
+            Вызывать везде, где фигурирует локальный чат айди
+            """
+        
+            query = f"""
+            SELECT 
+                id
+                FROM chats
+                WHERE platform_chat_id = '{chat_id}'
+            """
+
+            with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
+                try:
+                    row = conn.execute(query=query, params=()).fetchone()
+                    if row is None:
+                        return self._empty_stats(chat_id)
+
+                    chat_id_local = row['id']
+
+                    return chat_id_local
+
+                except Exception as e:
+                    print(f"Database error in get_chat_stats: {e}")
+                    raise
+
+                
+                
     def _get_where_clause(self, chat_id: int | None) -> tuple[str, tuple]:
         """Вспомогательный метод для формирования условия WHERE"""
         if chat_id is not None:
             return "WHERE m.chat_id = %s", (chat_id,)
         return "", ()
 
-    def get_sentiment_distribution(self, chat_id: int | None) -> dict[str, float]:
+    def get_sentiment_distribution(self, chat_id_global: int | None) -> dict[str, float]:
         """Проценты настроений для Pie-диаграммы"""
+        
+        chat_id = self.get_local_chat_id(chat_id_global)
         where, params = self._get_where_clause(chat_id)
         query = f"""
             SELECT
@@ -190,13 +223,15 @@ class StatsRepository:
 
         total = row["total"]
         return {
-            "positive": round((row["positive"] / total) * 100, 2),
-            "negative": round((row["negative"] / total) * 100, 2),
-            "neutral": round((row["neutral"] / total) * 100, 2),
+            "positive": row["positive"],
+            "negative": row["negative"],
+            "neutral": row["neutral"],
         }
 
-    def get_sentiment_by_day(self, chat_id: int | None) -> list[dict[str, Any]]:
+    def get_sentiment_by_day(self, chat_id_global: int | None) -> list[dict[str, Any]]:
         """Массив настроений по дням для гистограммы"""
+        
+        chat_id = self.get_local_chat_id(chat_id_global)
         where, params = self._get_where_clause(chat_id)
         query = f"""
             SELECT
@@ -225,8 +260,10 @@ class StatsRepository:
             for row in rows
         ]
 
-    def get_problem_categories(self, chat_id: int | None) -> list[dict[str, Any]]:
+    def get_problem_categories(self, chat_id_global: int | None) -> list[dict[str, Any]]:
         """Массив категорий проблем для диаграммы"""
+        
+        chat_id = self.get_local_chat_id(chat_id_global)
         # Если chat_id есть, фильтруем по нему. Если нет - берем все.
         condition = "m.chat_id = %s" if chat_id is not None else "1=1"
         params = (chat_id,) if chat_id is not None else ()
@@ -247,8 +284,10 @@ class StatsRepository:
 
         return [{"category": row["problem_category"], "count": row["count"]} for row in rows]
 
-    def get_top_users(self, chat_id: int | None) -> dict[str, list[dict[str, Any]]]:
+    def get_top_users(self, chat_id_global: int | None) -> dict[str, list[dict[str, Any]]]:
         """Топ пользователей: самые активные, позитивные и негативные"""
+        
+        chat_id = self.get_local_chat_id(chat_id_global)
         condition = "m.chat_id = %s" if chat_id is not None else "1=1"
         params = (chat_id,) if chat_id is not None else ()
 
@@ -294,9 +333,11 @@ class StatsRepository:
             "most_positive": [dict(row) for row in positive],
             "most_negative": [dict(row) for row in negative],
         }
-
-    def get_chat_stats(self, chat_id: int | None = None) -> dict[str, Any]:
+    
+    def get_chat_stats(self, chat_global_id: int | None = None) -> dict[str, Any]:
         # Базовая часть запроса одинакова для обоих случаев
+        
+        chat_id = self.get_local_chat_id(chat_id=chat_global_id)
         base_query = """
             SELECT
                 COUNT(*) AS total,

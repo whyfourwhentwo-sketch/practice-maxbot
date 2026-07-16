@@ -16,7 +16,7 @@ from shared.config import (
     INFERENCE_STREAM,
     LABELS
 )
-from shared.queue import MessageBroker, InferenceResultBatch
+from shared.queue import MessageBroker
 
 
 def setup_bot_data(app: Application) -> None:

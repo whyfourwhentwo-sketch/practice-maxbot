@@ -21,7 +21,10 @@ practice-maxbot/
 │   ├── excel/
 │   ├── machine/
 │   └── models/
-├── frontend/
+├── frontend_charts/
+│   ├── public/
+│   └── src/
+│       └── components/
 ├── docker-compose.yml
 ├── main.py
 ├── pyproject.toml
@@ -34,7 +37,8 @@ practice-maxbot/
 ### 1. Зависимости
 
 ```bash
-poetry install
+poetry install  # бэк
+npm install     # фронт
 ```
 
 ### 2. Переменные окружения
@@ -62,6 +66,8 @@ poetry run python main.py -w
 # Терминал 3 — API
 poetry run python main.py -a
 ```
+
+На Linux/macOS замените `set` на `export`.
 
 ### 5. Обучение модели
 
