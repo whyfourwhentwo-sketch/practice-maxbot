@@ -13,43 +13,40 @@ class PredictionService:
         print(self.classifiers.keys())
 
     def predict_single_model(self, embeddings, clf: LogisticRegression, relative_predicts: list[int] | None = None, filtering_label: int | None = None) -> list[int | None]:
-        """
-        Предикты единой моделью с фильтрацией на базе другой модели
-        
-        relative_predicts - массив предиктов другой модели
-        filtering_label - фильтрующая метка, будут сделаны предсказания только на эмбеддинги, размеченные этой меткой ранее
-        """
-        
-        if relative_predicts is not None and filtering_label is not None:
-            result = [None] * len(embeddings)
-            indices = [i for i, p in enumerate(relative_predicts) if p == filtering_label]
-            if indices:
-                filtered_embeddings = embeddings[indices]
-                preds = clf.predict(filtered_embeddings)
-                for i, pred in zip(indices, preds):
-                    result[i] = pred
-            return result
-        return clf.predict(embeddings).tolist()
+        print('=' * 50)
+        preds = [None] * len(embeddings)
+        print(f"Макет предиктов: {preds}")
+        if(relative_predicts is not None and filtering_label is not None):
+            indices = [i for i, value in enumerate(relative_predicts) if value == filtering_label]
+            print(f"Индексы: {indices}")
+            filtered_embeddings = np.array(embeddings)[indices]
+            filtered_preds = clf.predict(filtered_embeddings)
+            
+            for i, value in zip(indices, filtered_preds):
+                preds[i] = int(value)
+            
+            print(f"Финалочка: {preds}")
+            return preds
+        return clf.predict(embeddings)
+            
     
     
     def predict_single_proba(self, embeddings, clf: LogisticRegression, relative_predicts: list[int] | None = None, filtering_label: int | None = None) -> list[int]:
-        """
-        Уверенность модели с фильтрацией на базе другой модели
-        
-        relative_predicts - массив предиктов другой модели
-        filtering_label - фильтрующая метка, будут сделаны предсказания только на эмбеддинги, размеченные этой меткой ранее
-        """
-        
-        if relative_predicts is not None and filtering_label is not None:
-            result = [None] * len(embeddings)
-            indices = [i for i, p in enumerate(relative_predicts) if p == filtering_label]
-            if indices:
-                filtered_embeddings = embeddings[indices]
-                preds = clf.predict_proba(filtered_embeddings)
-                for i, pred in zip(indices, preds):
-                    result[i] = pred
-            return result
-        return clf.predict_proba(embeddings).tolist()
+        print('=' * 50)
+        preds = [None] * len(embeddings)
+        print(f"Макет предиктов: {preds}")
+        if(relative_predicts is not None and filtering_label is not None):
+            indices = [i for i, value in enumerate(relative_predicts) if value == filtering_label]
+            print(f"Индексы: {indices}")
+            filtered_embeddings = np.array(embeddings)[indices]
+            filtered_preds = clf.predict_proba(filtered_embeddings)
+            
+            for i, value in zip(indices, filtered_preds):
+                preds[i] = value
+            
+            print(f"Финалочка: {preds}")
+            return preds
+        return clf.predict_proba(embeddings)
     
     
     def predict_batch(self, texts: list[str]) -> dict[str, list] | None:
@@ -58,16 +55,18 @@ class PredictionService:
             return None
 
         predicts: dict[str, list] = {}
-        embeddings = self.embedding_model.encode(texts, show_progress_bar=False)
+        embeddings = np.array(self.embedding_model.encode(texts, show_progress_bar=False))
         for name, model in self.classifiers.items():
-            if(name in LABELS_RELATIONS):
-                preds = self.predict_single_model(embeddings, model, predicts[LABELS_RELATIONS[name]["based_on"]], LABELS_RELATIONS[name]["filtering_label"])
-                probs = self.predict_single_proba(embeddings, model, predicts[LABELS_RELATIONS[name]["based_on"]], LABELS_RELATIONS[name]["filtering_label"])
-                
-            else:
-                preds = model.predict(embeddings)
-                probs = model.predict_proba(embeddings)
-            predicts[name] = preds.tolist()
+            relation = LABELS_RELATIONS.get(name, {})
+            relative_predicts = predicts.get(relation.get("based_on"))
+            filtering_label = relation.get("filtering_label")
+            
+            preds = self.predict_single_model(embeddings, model, relative_predicts, filtering_label)
+            probs = self.predict_single_proba(embeddings, model, relative_predicts, filtering_label)
+            
+            print(type(preds))
+            predicts[name] = list(preds)
+            print("чекпоинт")
             predicts[f"{name}_confidence"] = [float(max(prob)) for prob in probs]
 
         return predicts

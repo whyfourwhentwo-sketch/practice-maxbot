@@ -199,11 +199,11 @@ class StatsRepository:
             SELECT 
                 id
                 FROM chats
-                WHERE platform_chat_id = %s
+                WHERE platform_chat_id = %s::varchar
             """
 
             with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
-                    row = conn.execute(query, chat_id).fetchone()
+                    row = conn.execute(query, (chat_id,)).fetchone()
                     if(row is None):
                         return 1
                     chat_id_local = row['id'] #Тут нужно при неправильном айди присылать соответствующий ответ

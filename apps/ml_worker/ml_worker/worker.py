@@ -9,6 +9,7 @@ from shared.config import (
     INFERENCE_STREAM,
     INFERENCE_CONSUMER_GROUP,
     ML_BATCH_SIZE,
+    LABELS
 )
 from shared.db import AnalysisRecord, StatsRepository
 from shared.db.repository import SENTIMENT_LABELS
@@ -27,6 +28,8 @@ def _build_analysis_record(
     message: InferenceMessage,
     useful_label: int,
     sentiment_label: int,
+    category_label: int,
+    category_confidence : float | None,
     usefulness_confidence: float | None,
     sentiment_confidence: float | None,
 ) -> AnalysisRecord:
@@ -41,8 +44,10 @@ def _build_analysis_record(
         cleaned_text=_clean_text(message.text),
         is_useful=useful_label == 0,
         usefulness_confidence=usefulness_confidence,
-        sentiment=SENTIMENT_LABELS.get(sentiment_label),
+        sentiment=LABELS.get("sentiment")[sentiment_label],
         sentiment_confidence=sentiment_confidence,
+        problem_category=LABELS.get("category")[category_label],
+        problem_confidence=category_confidence
     )
 
 
@@ -93,6 +98,7 @@ class MLWorker:
 
             except Exception as e:
                 print(f"Error in ML worker loop: {e}")
+                raise(e)
                 await asyncio.sleep(1)
 
     def _process_batch(self, entries: list[StreamEntry]) -> None:
@@ -101,6 +107,7 @@ class MLWorker:
         if predictions is None:
             return
 
+        print(predictions)
         records: list[AnalysisRecord] = []
         for i, entry in enumerate(entries):
             message = entry.message
@@ -110,6 +117,8 @@ class MLWorker:
                     message=message,
                     useful_label=predictions["useful"][i],
                     sentiment_label=predictions["sentiment"][i],
+                    category_label=predictions["category"][i],
+                    category_confidence=predictions.get("category_confidence", [None])[i],
                     usefulness_confidence=predictions.get("useful_confidence", [None])[i],
                     sentiment_confidence=predictions.get("sentiment_confidence", [None])[i],
                 )

@@ -5,8 +5,8 @@ import telegram
 from telegram import ReplyParameters
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.request import HTTPXRequest
-
-#from telegram_bot.handlers import handle_start, handle_message, handle_private_message
+from shared.queue.schemas import InferenceResultMessage
+from apps.telegram_bot.telegram_bot.handlers import handle_start, handle_message, handle_private_message
 from apps.telegram_bot.telegram_bot.handlers import handle_start, handle_message, handle_private_message
 from shared.config import (
     BOT_TOKEN,
@@ -34,8 +34,6 @@ def setup_bot_data(app: Application) -> None:
 async def send_results_job(context) -> None:
     """Фоновая задача для чтения результатов из брокера и отправки их в Telegram."""
     app = context.application
-    result_broker: MessageBroker = app.bot_data["result_broker"]
-    consumer_name: str = app.bot_data["result_consumer_name"]
 
 # в проде ответы бота не нужны
 # Deprecated
@@ -46,7 +44,7 @@ async def send_results_job(context) -> None:
     #         consumer_name,
     #         8,
     #         200,
-    #         InferenceResultBatch
+    #         InferenceResultMessage
     #     )
     #     print(f"[send_results_job] got {len(entries)} entries")
 

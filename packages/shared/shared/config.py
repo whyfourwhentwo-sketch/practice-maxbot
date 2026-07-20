@@ -18,7 +18,8 @@ def find_project_root() -> Path:
 PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", find_project_root()))
 DATA_DIR = Path(os.getenv("DATA_DIR", PROJECT_ROOT / "data"))
 LABELS_DIR = DATA_DIR / "machine" / "labels"
-DATA_FILE = DATA_DIR / "excel" / "data_ml.xlsx"
+DATA_RAW_FILE = DATA_DIR / "excel" / "data_ml.xlsx"
+DATA_PARSED_FILE = DATA_DIR / "parsed" / "data.npz"
 EMBEDDINGS_FILE = DATA_DIR / "machine" / "embeddings.npy"
 MODELS_DIR = DATA_DIR / "models"
 
@@ -35,16 +36,16 @@ CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "60"))
 
 
 """Excel парсинг (планируется убрать или урезать, т.к. будет автоподбор) (Готово, требуются тесты)"""
-EXCEL_RANGE = "A1:D311"
-PHRASE_COLUMN = 0
-LABEL_COLUMN = 3
+# EXCEL_RANGE = "A1:D311"
+# PHRASE_COLUMN = 0
+# LABEL_COLUMN = 3
 LABELS = { # модели создаются на базе этого параметра
     "useful": ["да", "нет"],
-    "sentiment": ["+", "-", "="],
-    #"category": ["category1", "category2", "category3"], #WIP
+    "sentiment": ["positive", "negative", "neutral"],
+    "category": ["окна", "парковка", "пожарная сигнализация", "лифт", "кондиционер", "ук", "улица", "соседи", "животные", "вода/отопление", "потеря", "мусор", "посторонние", "запах", "электричество", "водители", "охрана", "канализация"], #WIP
 }
 LABELS_RELATIONS = { # связи между моделями (WIP)
-    #"category": {"based_on": "useful", "filtering_label": 1}
+    "category": {"based_on": "useful", "filtering_label": 0}
 }
 
 

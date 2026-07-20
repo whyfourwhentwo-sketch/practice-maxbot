@@ -3,6 +3,7 @@
 data/excel/**
 data/machine/**
 data/models/**
+data/parsed**
 __pycache__/
 .idea/
 .vscode/
