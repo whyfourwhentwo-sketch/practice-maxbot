@@ -46,8 +46,8 @@ def _build_analysis_record(
         usefulness_confidence=usefulness_confidence,
         sentiment=LABELS.get("sentiment")[sentiment_label],
         sentiment_confidence=sentiment_confidence,
-        problem_category=LABELS.get("category")[category_label],
-        problem_confidence=category_confidence
+        problem_category=LABELS.get("category")[category_label] if category_label is not None else None,
+        problem_confidence=category_confidence 
     )
 
 
