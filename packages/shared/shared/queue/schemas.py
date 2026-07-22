@@ -1,7 +1,4 @@
-from typing import List, Any
-
-from pydantic import BaseModel, Field, field_serializer
-import numpy as np
+from pydantic import BaseModel, Field
 
 
 class InferenceMessage(BaseModel):

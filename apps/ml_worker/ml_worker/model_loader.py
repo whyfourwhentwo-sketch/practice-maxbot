@@ -2,7 +2,7 @@ import joblib
 from sentence_transformers import SentenceTransformer
 from sklearn.linear_model import LogisticRegression
 
-from shared.config import MODELS_DIR, MODEL_NAME, LABELS
+from shared.config import MODELS_DIR, MODEL_NAME, LABELS, CONFIG_FILE
 
 
 def load_embedding_model() -> SentenceTransformer:
@@ -20,7 +20,8 @@ def load_classifiers() -> dict[str, LogisticRegression]:
             raise FileNotFoundError(
                 f"ERROR: Отсутствует обязательная модель '{name}'.\n"
                 f"Ожидаемый путь: {model_path.resolve()}\n"
-                f"Проверьте, что файлы моделей корректно скопированы в директорию {MODELS_DIR.resolve()}"
+                f"Проверьте, что файлы моделей корректно скопированы в директорию {MODELS_DIR.resolve()}\n"
+                f"Если данная модель была необязательна, исключите ее из файла конфигурации {CONFIG_FILE.resolve()}"
             )
 
         try:

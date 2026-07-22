@@ -98,7 +98,7 @@ class MLWorker:
 
             except Exception as e:
                 print(f"Error in ML worker loop: {e}")
-                raise(e)
+                # raise(e) 
                 await asyncio.sleep(1)
 
     def _process_batch(self, entries: list[StreamEntry]) -> None:

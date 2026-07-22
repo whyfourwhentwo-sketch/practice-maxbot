@@ -14,7 +14,6 @@ from shared.config import (
     INFERENCE_RESULT_CONSUMER_GROUP,
     INFERENCE_RESULT_STREAM,
     INFERENCE_STREAM,
-    LABELS
 )
 from shared.queue import MessageBroker
 

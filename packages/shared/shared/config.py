@@ -18,13 +18,18 @@ def find_project_root() -> Path:
 PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", find_project_root()))
 DATA_DIR = Path(os.getenv("DATA_DIR", PROJECT_ROOT / "data"))
 LABELS_DIR = DATA_DIR / "machine" / "labels"
+MODELS_DIR = DATA_DIR / "models"
+
+
+"""Файлы"""
+CONFIG_FILE = PROJECT_ROOT / "packages" / "shared" / "shared" / "config.py"
 DATA_RAW_FILE = DATA_DIR / "excel" / "data_ml.xlsx"
 DATA_PARSED_FILE = DATA_DIR / "parsed" / "data.npz"
 EMBEDDINGS_FILE = DATA_DIR / "machine" / "embeddings.npy"
-MODELS_DIR = DATA_DIR / "models"
+
 
 """Бот"""
-BOT_TOKEN = os.getenv("TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 """API"""
@@ -34,8 +39,7 @@ CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "60"))
 
 
 
-
-"""Excel парсинг (планируется убрать или урезать, т.к. будет автоподбор) (Готово, требуются тесты)"""
+"""Связь между Excel и моделями; моделями между собой"""
 # EXCEL_RANGE = "A1:D311"
 # PHRASE_COLUMN = 0
 # LABEL_COLUMN = 3

@@ -13,7 +13,7 @@ def create_data():
 
 
 def load_data_safe(file_path) -> tuple[np. ndarray, np.ndarray, dict[str, np.ndarray]]:
-    """Грузим данные (WIP)"""
+    """Грузим данные"""
 
     parsed = new__get_excel(file_path)  # Если нет эксель данных, дальше двигаться смысла нет
 
@@ -22,4 +22,4 @@ def load_data_safe(file_path) -> tuple[np. ndarray, np.ndarray, dict[str, np.nda
     except (FileNotFoundError):
         embeddings = create_embeddings(parsed["text"], load_embedding_model())
         save_embeddings(embeddings)
-    return parsed["text"], embeddings, {key: value for key, value in parsed.items() if key != "text"}
+    return embeddings, {key: value for key, value in parsed.items() if key != "text"}

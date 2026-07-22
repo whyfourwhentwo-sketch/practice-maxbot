@@ -350,76 +350,77 @@ class StatsRepository:
             "most_negative": [dict(row) for row in negative],
         }
     
-    def get_chat_stats(self, chat_global_id: str | None = None) -> dict[str, Any]:
-        # Базовая часть запроса одинакова для обоих случаев
+    
+    # Старый ответ API, сейчас не будет работать
+    # def get_chat_stats(self, chat_global_id: str | None = None) -> dict[str, Any]:
         
-        chat_id = self.get_local_chat_id(chat_id=chat_global_id)
-        base_query = """
-            SELECT
-                COUNT(*) AS total,
-                COUNT(*) FILTER (WHERE ar.is_useful = true) AS useful_count,
-                COUNT(*) FILTER (WHERE ar.is_useful = false) AS useless_count,
-                COUNT(*) FILTER (WHERE ar.sentiment = 'positive') AS positive_count,
-                COUNT(*) FILTER (WHERE ar.sentiment = 'negative') AS negative_count,
-                COUNT(*) FILTER (WHERE ar.sentiment = 'neutral') AS neutral_count,
-                COUNT(*) FILTER (WHERE ar.is_critical = true) AS critical_count,
-                COUNT(DISTINCT m.user_id) AS unique_users
-            FROM messages m
-            JOIN analysis_results ar ON ar.message_id = m.id
-            JOIN chats c ON c.id = m.chat_id
-        """
+    #     chat_id = self.get_local_chat_id(chat_id=chat_global_id)
+    #     base_query = """
+    #         SELECT
+    #             COUNT(*) AS total,
+    #             COUNT(*) FILTER (WHERE ar.is_useful = true) AS useful_count,
+    #             COUNT(*) FILTER (WHERE ar.is_useful = false) AS useless_count,
+    #             COUNT(*) FILTER (WHERE ar.sentiment = 'positive') AS positive_count,
+    #             COUNT(*) FILTER (WHERE ar.sentiment = 'negative') AS negative_count,
+    #             COUNT(*) FILTER (WHERE ar.sentiment = 'neutral') AS neutral_count,
+    #             COUNT(*) FILTER (WHERE ar.is_critical = true) AS critical_count,
+    #             COUNT(DISTINCT m.user_id) AS unique_users
+    #         FROM messages m
+    #         JOIN analysis_results ar ON ar.message_id = m.id
+    #         JOIN chats c ON c.id = m.chat_id
+    #     """
 
-        with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
-            try:
-                if chat_id is None:
-                    # Случай 1: Статистика по ВСЕМ чатам
-                    query = base_query
-                    params = ()
-                    print("Executing query for ALL chats")
-                else:
-                    # Случай 2: Статистика по КОНКРЕТНОМУ чату.
-                    # ВАЖНО: Мы сравниваем с c.id (BIGINT), так как chat_id у нас int!
-                    query = base_query + "\nWHERE c.id = %s"
-                    params = (chat_id,)
-                    print(f"Executing query for chat_id={chat_id}")
+    #     with psycopg.connect(self._database_url, row_factory=dict_row) as conn:
+    #         try:
+    #             if chat_id is None:
+    #                 # Случай 1: Статистика по ВСЕМ чатам
+    #                 query = base_query
+    #                 params = ()
+    #                 print("Executing query for ALL chats")
+    #             else:
+    #                 # Случай 2: Статистика по КОНКРЕТНОМУ чату.
+    #                 # ВАЖНО: Мы сравниваем с c.id (BIGINT), так как chat_id у нас int!
+    #                 query = base_query + "\nWHERE c.id = %s"
+    #                 params = (chat_id,)
+    #                 print(f"Executing query for chat_id={chat_id}")
 
-                # --- ОТЛАДОЧНЫЙ ВЫВОД (поможет увидеть правду) ---
-                print("\n[DEBUG] SQL Query:")
-                print(query)
-                print(f"[DEBUG] Params: {params}\n")
-                # -------------------------------------------------
+    #             # --- ОТЛАДОЧНЫЙ ВЫВОД (поможет увидеть правду) ---
+    #             print("\n[DEBUG] SQL Query:")
+    #             print(query)
+    #             print(f"[DEBUG] Params: {params}\n")
+    #             # -------------------------------------------------
 
-                row = conn.execute(query, params).fetchone()
+    #             row = conn.execute(query, params).fetchone()
 
-                if row is None:
-                    return self._empty_stats(chat_id)
+    #             if row is None:
+    #                 return self._empty_stats(chat_id)
 
-                return {
-                    "chat_id": chat_id,
-                    "total": int(row["total"]),
-                    "useful_count": int(row["useful_count"]),
-                    "useless_count": int(row["useless_count"]),
-                    "positive_count": int(row["positive_count"]),
-                    "negative_count": int(row["negative_count"]),
-                    "neutral_count": int(row["neutral_count"]),
-                    "critical_count": int(row["critical_count"]),
-                    "unique_users": int(row["unique_users"]),
-                }
+    #             return {
+    #                 "chat_id": chat_id,
+    #                 "total": int(row["total"]),
+    #                 "useful_count": int(row["useful_count"]),
+    #                 "useless_count": int(row["useless_count"]),
+    #                 "positive_count": int(row["positive_count"]),
+    #                 "negative_count": int(row["negative_count"]),
+    #                 "neutral_count": int(row["neutral_count"]),
+    #                 "critical_count": int(row["critical_count"]),
+    #                 "unique_users": int(row["unique_users"]),
+    #             }
 
-            except Exception as e:
-                print(f"Database error in get_chat_stats: {e}")
-                raise
+    #         except Exception as e:
+    #             print(f"Database error in get_chat_stats: {e}")
+    #             raise
 
-    @staticmethod
-    def _empty_stats(chat_id: int | None) -> dict[str, Any]:
-        return {
-            "chat_id": chat_id,
-            "total": 0,
-            "useful_count": 0,
-            "useless_count": 0,
-            "positive_count": 0,
-            "negative_count": 0,
-            "neutral_count": 0,
-            "critical_count": 0,
-            "unique_users": 0,
-        }
+    # @staticmethod
+    # def _empty_stats(chat_id: int | None) -> dict[str, Any]:
+    #     return {
+    #         "chat_id": chat_id,
+    #         "total": 0,
+    #         "useful_count": 0,
+    #         "useless_count": 0,
+    #         "positive_count": 0,
+    #         "negative_count": 0,
+    #         "neutral_count": 0,
+    #         "critical_count": 0,
+    #         "unique_users": 0,
+    #     }

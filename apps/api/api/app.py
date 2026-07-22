@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from .cache import StatsCache
-from shared.config import API_HOST, API_PORT, INFERENCE_RESULT_STREAM, INFERENCE_RESULT_CONSUMER_GROUP
+from shared.config import API_HOST, API_PORT, INFERENCE_RESULT_STREAM
 from shared.db import StatsRepository
 from shared.queue import MessageBroker
 from datetime import datetime

@@ -52,7 +52,7 @@ npm install    # фронт
 
 ```bash
 cp .env-example .env
-# Заполните TOKEN
+# Заполните BOT_TOKEN
 ```
 
 ### 3. Redis

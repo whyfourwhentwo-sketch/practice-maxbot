@@ -3,7 +3,7 @@ import numpy as np
 
 from shared.config import DATA_RAW_FILE, LABELS, LABELS_DIR, DATA_PARSED_FILE
 
-# Устаревшее
+# Deprecated
 
 # def load_excel_data(path=None) -> tuple[list[str], dict[str, np.ndarray]]:
 #     """Подгружаем таблицу, парсим"""
@@ -89,16 +89,17 @@ def new__get_excel(path_parsed: str | None = None, path_excel: str | None = None
         return result
         
     
-"""Архитектура не до конца ясна для методов ниже, пока не используются"""
+# Может быть использовано для динамической подгрузки только нужных данных. Если вдруг нужно добавить новую модель на те же данные
+# На практике почти бесполезное из-за низкой частоты переобучения моделей
 
-def save_labels(name: str, labels: list[str]) -> None:
-    """Сохранение меток в разные файлы по имени (WIP)"""
-    LABELS_DIR.mkdir(parents=True, exist_ok=True)
-    np.save(LABELS_DIR / f"{name}.npy", np.array(labels))
+# def save_labels(name: str, labels: list[str]) -> None:
+#     """Сохранение меток в разные файлы по имени (WIP)"""
+#     LABELS_DIR.mkdir(parents=True, exist_ok=True)
+#     np.save(LABELS_DIR / f"{name}.npy", np.array(labels))
     
     
-def load_labels(name: str) -> np.ndarray:
-    """Загрузка меток по имени (WIP)"""
-    data = np.load(LABELS_DIR / f"{name}.npy")
-    return data
+# def load_labels(name: str) -> np.ndarray:
+#     """Загрузка меток по имени (WIP)"""
+#     data = np.load(LABELS_DIR / f"{name}.npy")
+#     return data
     
